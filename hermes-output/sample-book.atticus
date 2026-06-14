@@ -1,0 +1,57 @@
+{
+  "id": "sample-book-001",
+  "title": "The Detective's Apprentice",
+  "author": "Hermes AI",
+  "subtitle": "A Mystery Novel",
+  "parts": [],
+  "chapters": [
+    {
+      "id": "ch-01",
+      "title": "Chapter 1: The Missing Heiress",
+      "order": 0,
+      "collapsed": false,
+      "wordCountGoal": 3000,
+      "scenes": [
+        {
+          "id": "sc-01-01",
+          "title": "Scene 1: The Phone Call",
+          "order": 0,
+          "content": "<h2>Scene 1: The Phone Call</h2><p>The rain hammered against the windows of Detective Sarah Mitchell's office as she stared at the cold cup of coffee on her desk. It was 3 AM, and the phone was ringing.</p><p>She picked it up on the third ring. \"Mitchell.\"</p><p>\"Detective, this is Captain Reeves. We have a situation.\"</p><h3>The Drive Downtown</h3><p>Twenty minutes later, Sarah was standing in the lobby of the Fairview Hotel, watching forensic technicians work the scene. A young woman — no older than twenty-five — had vanished from her room. No signs of forced entry. No struggle. Just an open window and a single red rose on the pillow.</p><div data-callout-type=\"info\">This is the first appearance of the red rose motif that will recur throughout the novel.</div><blockquote>\"She was here one minute, gone the next. Like she was never real.\" — Hotel concierge</blockquote>",
+          "wordCount": 142
+        },
+        {
+          "id": "sc-01-02",
+          "title": "Scene 2: The First Clue",
+          "order": 1,
+          "content": "<h2>Scene 2: The First Clue</h2><p>Sarah examined the room carefully. The rose was fresh — cut within the last few hours. She bagged it as evidence.</p><p>On the nightstand, she found a handwritten note: \"Meet me at the old pier. Come alone. —J\"</p><p>The handwriting was elegant, practiced. Whoever wrote this wanted to be remembered.</p>",
+          "wordCount": 68
+        }
+      ]
+    },
+    {
+      "id": "ch-02",
+      "title": "Chapter 2: The Old Pier",
+      "order": 1,
+      "collapsed": false,
+      "wordCountGoal": 3500,
+      "scenes": [
+        {
+          "id": "sc-02-01",
+          "title": "Scene 1: Arrival at the Pier",
+          "order": 0,
+          "content": "<h2>Scene 1: Arrival at the Pier</h2><p>The old fishing pier had been abandoned for years, its wooden planks rotting under the weight of salt and time. Sarah's footsteps echoed as she walked toward the end, her flashlight cutting through the fog.</p><p>She found another rose. And another note.</p><p>\"You're getting closer, Detective. But the truth is darker than you think.\"</p><div data-callout-type=\"warning\">The antagonist is aware of Sarah's investigation — she is being watched.</div>",
+          "wordCount": 89
+        }
+      ]
+    }
+  ],
+  "createdAt": "2026-06-14T12:00:00.000Z",
+  "updatedAt": "2026-06-14T12:00:00.000Z",
+  "wordCountGoal": 80000,
+  "trimSize": "6x9",
+  "includeToc": true,
+  "includeCopyright": true,
+  "includeDedication": true,
+  "copyrightText": "© 2026 Hermes AI. All rights reserved.",
+  "dedicationText": "For everyone who believes in the power of stories."
+}

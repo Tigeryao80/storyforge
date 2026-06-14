@@ -1,18 +1,25 @@
+// src/app/page.tsx
+
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import ChapterTree from '@/components/sidebar/ChapterTree';
 import WritingGoals from '@/components/sidebar/WritingGoals';
 import ChapterGoals from '@/components/sidebar/ChapterGoals';
 import SprintTimer from '@/components/sprint/SprintTimer';
 import CloudBackup from '@/components/backup/CloudBackup';
+import HermesPanel from '@/components/hermes/HermesPanel';
+import VersionHistory from '@/components/history/VersionHistory';
 import DocxImportButton from '@/components/import/DocxImportButton';
+import HermesImportButton from '@/components/import/HermesImportButton';
 import ThemeBuilder from '@/components/themes/ThemeBuilder';
 import DevicePreview from '@/components/preview/DevicePreview';
 import ExportSettings from '@/components/export/ExportSettings';
+import FocusMode from '@/components/editor/FocusMode';
 import { useBookStore } from '@/store/bookStore';
 import { loadMostRecentBook } from '@/lib/db/bookPersistence';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 const SceneEditor = dynamic(() => import('@/components/editor/SceneEditor'), {
   ssr: false,
@@ -24,9 +31,21 @@ const SceneEditor = dynamic(() => import('@/components/editor/SceneEditor'), {
 });
 
 export default function Home() {
-  const { activeChapterId, activeSceneId, book, sidebarOpen, toggleSidebar, theme } = useBookStore();
-  const [showExportSettings, setShowExportSettings] = useState(false);
+  const {
+    activeChapterId,
+    activeSceneId,
+    book,
+    sidebarOpen,
+    toggleSidebar,
+    theme,
+    setBookMeta,
+  } = useBookStore();
 
+  const [showExportSettings, setShowExportSettings] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
+  const [showFocusMode, setShowFocusMode] = useState(false);
+
+  // Load saved book on mount
   useEffect(() => {
     loadMostRecentBook().then((savedBook) => {
       if (savedBook) {
@@ -37,6 +56,17 @@ export default function Home() {
         });
       }
     });
+  }, []);
+
+  // Global keyboard shortcuts
+  useKeyboardShortcuts({
+    'Ctrl+Shift+F': () => setShowFocusMode((v) => !v),
+    'Ctrl+Shift+E': () => setShowExportSettings(true),
+    'Ctrl+Shift+H': () => toggleSidebar(),
+  });
+
+  const handleExitFocus = useCallback(() => {
+    setShowFocusMode(false);
   }, []);
 
   const handleExport = async (format: 'docx' | 'epub' | 'pdf' | 'mobi') => {
@@ -64,11 +94,13 @@ export default function Home() {
         <button
           onClick={toggleSidebar}
           className="text-gray-500 hover:text-gray-700 text-sm px-2 py-1 rounded hover:bg-gray-100"
+          title="Toggle sidebar (Ctrl+Shift+H)"
         >
           {sidebarOpen ? '◀' : '▶'} Chapters
         </button>
 
         <DocxImportButton />
+        <HermesImportButton />
 
         <div className="flex-1 text-center">
           <span className="font-semibold text-gray-800">{book.title || 'Untitled Book'}</span>
@@ -89,8 +121,20 @@ export default function Home() {
         </div>
 
         <ThemeBuilder />
-
         <DevicePreview />
+
+        {/* Focus mode toggle */}
+        <button
+          onClick={() => setShowFocusMode((v) => !v)}
+          className={`text-xs px-2 py-1 rounded transition-colors ${
+            showFocusMode
+              ? 'bg-indigo-100 text-indigo-700'
+              : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+          }`}
+          title="Focus Mode (Ctrl+Shift+F)"
+        >
+          🎯 Focus
+        </button>
 
         <div className="flex items-center gap-1">
           <button
@@ -124,7 +168,7 @@ export default function Home() {
           <button
             onClick={() => setShowExportSettings(true)}
             className="text-xs px-2 py-1 rounded bg-blue-100 hover:bg-blue-200 text-blue-700 font-medium"
-            title="Export for KDP (all formats)"
+            title="Export for KDP (all formats) (Ctrl+Shift+E)"
           >
             KDP Export
           </button>
@@ -141,12 +185,19 @@ export default function Home() {
             <ChapterGoals />
             <SprintTimer />
             <CloudBackup />
+            <HermesPanel />
+            <VersionHistory />
           </div>
         )}
 
         {/* Editor */}
         {activeChapterId && activeSceneId ? (
-          <SceneEditor chapterId={activeChapterId} sceneId={activeSceneId} />
+          <SceneEditor
+            chapterId={activeChapterId}
+            sceneId={activeSceneId}
+            focusMode={showFocusMode}
+            onExitFocus={handleExitFocus}
+          />
         ) : (
           <div className="flex-1 flex items-center justify-center text-gray-400">
             Click a chapter to start writing
@@ -156,13 +207,21 @@ export default function Home() {
 
       {/* Status bar */}
       <footer className="h-8 bg-gray-50 border-t border-gray-200 flex items-center px-4 text-xs text-gray-500 gap-4 shrink-0">
-        <span>Atticus Rebuild v0.1.0</span>
+        <span>Atticus Rebuild v0.6.0</span>
         <span className="flex-1" />
-        <span>Auto-saved locally</span>
+        <span>
+          Shortcuts: Ctrl+B/I/U = format · Ctrl+2-6 = headings · Ctrl+Shift+F = focus · Ctrl+Shift+E = export
+        </span>
       </footer>
+
       {/* Export Settings Modal */}
       {showExportSettings && (
         <ExportSettings onClose={() => setShowExportSettings(false)} />
+      )}
+
+      {/* Focus Mode Overlay */}
+      {showFocusMode && (
+        <FocusMode active={showFocusMode} onExit={handleExitFocus} />
       )}
     </div>
   );

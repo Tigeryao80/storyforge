@@ -1,0 +1,21 @@
+{
+  "name": "atticus-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for Atticus book writing app — lets Hermes read/write books, check formatting, and export",
+  "type": "module",
+  "bin": {
+    "atticus-mcp": "./dist/server.js"
+  },
+  "scripts": {
+    "build": "tsc --skipLibCheck",
+    "start": "node dist/server.js",
+    "dev": "tsc && node dist/server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "@types/node": "^22.0.0"
+  }
+}

@@ -7,13 +7,28 @@ interface BookRecord {
   updatedAt: string;
 }
 
+interface VersionRecord {
+  id: string;
+  bookId: string;
+  data: Book;
+  label: string;
+  wordCount: number;
+  createdAt: string;
+}
+
 const db = new Dexie('AtticusRebuild') as Dexie & {
   books: EntityTable<BookRecord, 'id'>;
+  versions: EntityTable<VersionRecord, 'id'>;
 };
 
 db.version(1).stores({
   books: 'id, updatedAt',
 });
 
+db.version(2).stores({
+  books: 'id, updatedAt',
+  versions: 'id, bookId, createdAt',
+});
+
 export { db };
-export type { BookRecord };
+export type { BookRecord, VersionRecord };

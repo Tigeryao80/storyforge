@@ -4,6 +4,8 @@ import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import type { Book, Chapter, Scene, BookTheme, WritingGoal, CloudBackup } from '@/types/book';
 import { saveBook } from '@/lib/db/bookPersistence';
+import { convertToBook, parseHermesJSON, validateImport, convertChapterImport, convertSceneImport } from '@/lib/api/bookImport';
+import type { BookImport, ChapterImport, SceneImport } from '@/lib/api/types';
 
 interface SprintSession {
   startedAt: string;
@@ -66,6 +68,15 @@ interface BookState {
   stopSprint: () => void;
   resetSprint: () => void;
   setSprintDuration: (minutes: number) => void;
+
+  // Hermes import actions
+  importBook: (data: BookImport) => void;
+  importChapter: (chapter: ChapterImport, afterOrder?: number) => void;
+  importScene: (chapterId: string, scene: SceneImport) => void;
+  importFromHermesJSON: (jsonString: string) => { success: boolean; errors: string[]; warnings: string[] };
+
+  // Per-chapter theme
+  setChapterTheme: (chapterId: string, theme: Partial<BookTheme> | null) => void;
 }
 
 const defaultTheme: BookTheme = {
@@ -394,6 +405,94 @@ export const useBookStore = create<BookState>((set, get) => ({
       sprintDuration: minutes * 60,
       sprintRemaining: minutes * 60,
     });
+  },
+
+  // Hermes import actions
+  importBook: (data: BookImport) => {
+    const book = convertToBook(data);
+    set({
+      book,
+      activeChapterId: book.chapters[0]?.id ?? null,
+      activeSceneId: book.chapters[0]?.scenes[0]?.id ?? null,
+    });
+  },
+
+  importChapter: (chapterData: ChapterImport, afterOrder?: number) => {
+    set((state) => {
+      const order = afterOrder !== undefined ? afterOrder + 1 : state.book.chapters.length;
+      const newChapter = convertChapterImport(chapterData, order);
+      const chapters = [...state.book.chapters];
+      chapters.splice(order, 0, newChapter);
+      chapters.forEach((ch, i) => ch.order = i);
+      return {
+        book: { ...state.book, chapters, updatedAt: new Date().toISOString() },
+        activeChapterId: newChapter.id,
+        activeSceneId: newChapter.scenes[0]?.id ?? null,
+      };
+    });
+  },
+
+  importScene: (chapterId: string, sceneData: SceneImport) => {
+    set((state) => ({
+      book: {
+        ...state.book,
+        chapters: state.book.chapters.map(ch => {
+          if (ch.id !== chapterId) return ch;
+          const newScene = convertSceneImport(sceneData, ch.scenes.length);
+          return { ...ch, scenes: [...ch.scenes, newScene] };
+        }),
+        updatedAt: new Date().toISOString(),
+      },
+    }));
+  },
+
+  importFromHermesJSON: (jsonString: string) => {
+    try {
+      const parsed = parseHermesJSON(jsonString);
+      const validation = validateImport(parsed);
+
+      if (!validation.valid) {
+        return {
+          success: false,
+          errors: validation.errors.map(e => e.message),
+          warnings: validation.warnings.map(w => w.message),
+        };
+      }
+
+      const book = convertToBook(parsed);
+      set({
+        book,
+        activeChapterId: book.chapters[0]?.id ?? null,
+        activeSceneId: book.chapters[0]?.scenes[0]?.id ?? null,
+      });
+
+      return {
+        success: true,
+        errors: [],
+        warnings: validation.warnings.map(w => w.message),
+      };
+    } catch (err) {
+      return {
+        success: false,
+        errors: [err instanceof Error ? err.message : 'Unknown error'],
+        warnings: [],
+      };
+    }
+  },
+
+  // Per-chapter theme override
+  setChapterTheme: (chapterId: string, themeOverride: Partial<BookTheme> | null) => {
+    set((state) => ({
+      book: {
+        ...state.book,
+        chapters: state.book.chapters.map(ch =>
+          ch.id === chapterId
+            ? { ...ch, themeOverride: themeOverride ?? undefined }
+            : ch
+        ),
+        updatedAt: new Date().toISOString(),
+      },
+    }));
   },
 }));
 

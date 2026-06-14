@@ -13,6 +13,7 @@ export interface Chapter {
   order: number;
   collapsed: boolean;
   wordCountGoal: number;
+  themeOverride?: Partial<BookTheme>;
 }
 
 export interface Part {
