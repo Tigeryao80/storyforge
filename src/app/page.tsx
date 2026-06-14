@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import ChapterTree from '@/components/sidebar/ChapterTree';
 import WritingGoals from '@/components/sidebar/WritingGoals';
@@ -10,6 +10,7 @@ import CloudBackup from '@/components/backup/CloudBackup';
 import DocxImportButton from '@/components/import/DocxImportButton';
 import ThemeBuilder from '@/components/themes/ThemeBuilder';
 import DevicePreview from '@/components/preview/DevicePreview';
+import ExportSettings from '@/components/export/ExportSettings';
 import { useBookStore } from '@/store/bookStore';
 import { loadMostRecentBook } from '@/lib/db/bookPersistence';
 
@@ -24,6 +25,7 @@ const SceneEditor = dynamic(() => import('@/components/editor/SceneEditor'), {
 
 export default function Home() {
   const { activeChapterId, activeSceneId, book, sidebarOpen, toggleSidebar, theme } = useBookStore();
+  const [showExportSettings, setShowExportSettings] = useState(false);
 
   useEffect(() => {
     loadMostRecentBook().then((savedBook) => {
@@ -37,19 +39,18 @@ export default function Home() {
     });
   }, []);
 
-  const handleExport = async (format: 'docx' | 'epub' | 'pdf') => {
+  const handleExport = async (format: 'docx' | 'epub' | 'pdf' | 'mobi') => {
     if (format === 'docx') {
       const { exportToDocx } = await import('@/lib/export/docx');
       await exportToDocx(book);
     } else if (format === 'epub') {
       const { exportToEpub } = await import('@/lib/export/epub');
       const blob = await exportToEpub(book);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${book.title || 'book'}.epub`;
-      a.click();
-      URL.revokeObjectURL(url);
+      downloadBlob(blob, `${book.title || 'book'}.epub`);
+    } else if (format === 'mobi') {
+      const { exportToMobi } = await import('@/lib/export/mobi');
+      const blob = await exportToMobi(book);
+      downloadBlob(blob, `${book.title || 'book'}.mobi`);
     } else if (format === 'pdf') {
       const { exportToPdf } = await import('@/lib/export/pdf');
       await exportToPdf(book);
@@ -107,11 +108,25 @@ export default function Home() {
             EPUB
           </button>
           <button
+            onClick={() => handleExport('mobi')}
+            className="text-xs px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-600"
+            title="Export to MOBI (Kindle)"
+          >
+            MOBI
+          </button>
+          <button
             onClick={() => handleExport('pdf')}
             className="text-xs px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-600"
             title="Export to PDF"
           >
             PDF
+          </button>
+          <button
+            onClick={() => setShowExportSettings(true)}
+            className="text-xs px-2 py-1 rounded bg-blue-100 hover:bg-blue-200 text-blue-700 font-medium"
+            title="Export for KDP (all formats)"
+          >
+            KDP Export
           </button>
         </div>
       </header>
@@ -145,6 +160,21 @@ export default function Home() {
         <span className="flex-1" />
         <span>Auto-saved locally</span>
       </footer>
+      {/* Export Settings Modal */}
+      {showExportSettings && (
+        <ExportSettings onClose={() => setShowExportSettings(false)} />
+      )}
     </div>
   );
+}
+
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
