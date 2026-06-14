@@ -36,6 +36,14 @@ body {
   color: #1f2937;
 }
 
+.ProseMirror h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: #374151;
+}
+
 .ProseMirror p {
   margin-bottom: 1rem;
 }
@@ -64,4 +72,39 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
+}
+
+/* Callout boxes */
+.callout {
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+  border-radius: 6px;
+  border-left: 4px solid;
+  font-size: 0.95rem;
+}
+
+.callout-info {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  color: #1e40af;
+}
+
+.callout-warning {
+  background: #fffbeb;
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
+.callout-tip {
+  background: #f0fdf4;
+  border-color: #22c55e;
+  color: #166534;
+}
+
+/* Footnote markers */
+.footnote {
+  color: #2563eb;
+  cursor: help;
+  font-size: 0.75rem;
+  vertical-align: super;
 }

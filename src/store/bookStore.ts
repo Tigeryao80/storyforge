@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import type { Book, Chapter, Scene, BookTheme, WritingGoal } from '@/types/book';
+import { saveBook } from '@/lib/db/bookPersistence';
 
 interface BookState {
   book: Book;
@@ -272,3 +273,12 @@ export const useBookStore = create<BookState>((set, get) => ({
     );
   },
 }));
+
+// Auto-save to IndexedDB on changes
+let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+useBookStore.subscribe((state) => {
+  if (saveTimeout) clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => {
+    saveBook(state.book).catch(console.error);
+  }, 1000);
+});
