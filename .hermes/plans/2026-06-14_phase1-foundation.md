@@ -23,12 +23,12 @@
 
 **Step 1: Run type check**
 
-Run: `cd /c/Users/tiger/hermes-workspace/atticus-rebuild && npx tsc --noEmit 2>&1`
+Run: `cd /c/Users/tiger/hermes-workspace/storyforge-rebuild && npx tsc --noEmit 2>&1`
 Expected: No errors (or list existing errors to fix)
 
 **Step 2: Run production build**
 
-Run: `cd /c/Users/tiger/hermes-workspace/atticus-rebuild && npm run build 2>&1`
+Run: `cd /c/Users/tiger/hermes-workspace/storyforge-rebuild && npm run build 2>&1`
 Expected: Build completes successfully
 
 **Step 3: Fix any build errors**
@@ -40,13 +40,13 @@ If build fails, fix errors. Common issues to check:
 
 **Step 4: Verify dev server starts**
 
-Run: `cd /c/Users/tiger/hermes-workspace/atticus-rebuild && timeout 15 npm run dev 2>&1 || true`
+Run: `cd /c/Users/tiger/hermes-workspace/storyforge-rebuild && timeout 15 npm run dev 2>&1 || true`
 Expected: "Ready in Xms" message
 
 **Step 5: Commit**
 
 ```bash
-cd /c/Users/tiger/hermes-workspace/atticus-rebuild
+cd /c/Users/tiger/hermes-workspace/storyforge-rebuild
 git add -A
 git commit -m "chore: verify build pipeline and fix any errors"
 ```
@@ -62,7 +62,7 @@ git commit -m "chore: verify build pipeline and fix any errors"
 
 **Step 1: Check if file exists**
 
-Run: `ls /c/Users/tiger/hermes-workspace/atticus-rebuild/next-env.d.ts 2>&1`
+Run: `ls /c/Users/tiger/hermes-workspace/storyforge-rebuild/next-env.d.ts 2>&1`
 
 **Step 2: Create if missing**
 
@@ -79,7 +79,7 @@ If the file doesn't exist, create `next-env.d.ts`:
 **Step 3: Commit**
 
 ```bash
-cd /c/Users/tiger/hermes-workspace/atticus-rebuild
+cd /c/Users/tiger/hermes-workspace/storyforge-rebuild
 git add next-env.d.ts
 git commit -m "chore: add next-env.d.ts for Next.js TypeScript support"
 ```
@@ -128,18 +128,18 @@ import '@testing-library/jest-dom';
 
 **Step 3: Verify test script in package.json**
 
-Run: `cd /c/Users/tiger/hermes-workspace/atticus-rebuild && cat package.json | grep '"test"'`
+Run: `cd /c/Users/tiger/hermes-workspace/storyforge-rebuild && cat package.json | grep '"test"'`
 Expected: `"test": "jest"` exists
 
 **Step 4: Run tests to verify setup**
 
-Run: `cd /c/Users/tiger/hermes-workspace/atticus-rebuild && npm test 2>&1`
+Run: `cd /c/Users/tiger/hermes-workspace/storyforge-rebuild && npm test 2>&1`
 Expected: "No tests found" (setup works, no tests yet)
 
 **Step 5: Commit**
 
 ```bash
-cd /c/Users/tiger/hermes-workspace/atticus-rebuild
+cd /c/Users/tiger/hermes-workspace/storyforge-rebuild
 git add jest.config.ts jest.setup.ts
 git commit -m "chore: configure Jest with TypeScript and jsdom"
 ```
@@ -248,13 +248,13 @@ describe('bookStore', () => {
 
 **Step 2: Run tests to verify**
 
-Run: `cd /c/Users/tiger/hermes-workspace/atticus-rebuild && npm test 2>&1`
+Run: `cd /c/Users/tiger/hermes-workspace/storyforge-rebuild && npm test 2>&1`
 Expected: All 7 tests PASS
 
 **Step 3: Commit**
 
 ```bash
-cd /c/Users/tiger/hermes-workspace/atticus-rebuild
+cd /c/Users/tiger/hermes-workspace/storyforge-rebuild
 git add tests/store/bookStore.test.ts
 git commit -m "test: add unit tests for bookStore (7 tests)"
 ```
@@ -453,18 +453,18 @@ import DocxImportButton from '@/components/import/DocxImportButton';
 
 **Step 4: Run tests**
 
-Run: `cd /c/Users/tiger/hermes-workspace/atticus-rebuild && npm test 2>&1`
+Run: `cd /c/Users/tiger/hermes-workspace/storyforge-rebuild && npm test 2>&1`
 Expected: All existing tests still pass
 
 **Step 5: Run type check**
 
-Run: `cd /c/Users/tiger/hermes-workspace/atticus-rebuild && npx tsc --noEmit 2>&1`
+Run: `cd /c/Users/tiger/hermes-workspace/storyforge-rebuild && npx tsc --noEmit 2>&1`
 Expected: No errors
 
 **Step 6: Commit**
 
 ```bash
-cd /c/Users/tiger/hermes-workspace/atticus-rebuild
+cd /c/Users/tiger/hermes-workspace/storyforge-rebuild
 git add src/lib/import/docx.ts src/components/import/DocxImportButton.tsx src/app/page.tsx
 git commit -m "feat: add DOCX import with mammoth integration"
 ```
@@ -493,7 +493,7 @@ export async function exportToEpub(book: Book): Promise<Blob> {
     {
       title: book.title || 'Untitled Book',
       author: book.author || 'Unknown Author',
-      publisher: 'Atticus Rebuild',
+      publisher: 'StoryForge Rebuild',
       content: [
         {
           title: book.title || 'Untitled Book',
@@ -589,13 +589,13 @@ const handleExport = async (format: 'docx' | 'epub') => {
 
 **Step 3: Run type check**
 
-Run: `cd /c/Users/tiger/hermes-workspace/atticus-rebuild && npx tsc --noEmit 2>&1`
+Run: `cd /c/Users/tiger/hermes-workspace/storyforge-rebuild && npx tsc --noEmit 2>&1`
 Expected: No errors
 
 **Step 4: Commit**
 
 ```bash
-cd /c/Users/tiger/hermes-workspace/atticus-rebuild
+cd /c/Users/tiger/hermes-workspace/storyforge-rebuild
 git add src/lib/export/epub.ts src/app/page.tsx
 git commit -m "feat: add EPUB export with epub-gen-memory"
 ```
@@ -812,13 +812,13 @@ export default function ChapterTree() {
 
 **Step 2: Run type check**
 
-Run: `cd /c/Users/tiger/hermes-workspace/atticus-rebuild && npx tsc --noEmit 2>&1`
+Run: `cd /c/Users/tiger/hermes-workspace/storyforge-rebuild && npx tsc --noEmit 2>&1`
 Expected: No errors
 
 **Step 3: Commit**
 
 ```bash
-cd /c/Users/tiger/hermes-workspace/atticus-rebuild
+cd /c/Users/tiger/hermes-workspace/storyforge-rebuild
 git add src/components/sidebar/ChapterTree.tsx
 git commit -m "feat: add drag-and-drop chapter reordering with @dnd-kit"
 ```
@@ -848,7 +848,7 @@ interface BookRecord {
   updatedAt: string;
 }
 
-const db = new Dexie('AtticusRebuild') as Dexie & {
+const db = new Dexie('StoryForgeRebuild') as Dexie & {
   books: EntityTable<BookRecord, 'id'>;
 };
 
@@ -868,7 +868,7 @@ Create file `src/lib/db/bookPersistence.ts`:
 import { db } from './database';
 import type { Book } from '@/types/book';
 
-const ACTIVE_BOOK_KEY = 'atticus-active-book-id';
+const ACTIVE_BOOK_KEY = 'storyforge-active-book-id';
 
 export async function saveBook(book: Book): Promise<void> {
   await db.books.put({
@@ -960,13 +960,13 @@ useEffect(() => {
 
 **Step 5: Run type check**
 
-Run: `cd /c/Users/tiger/hermes-workspace/atticus-rebuild && npx tsc --noEmit 2>&1`
+Run: `cd /c/Users/tiger/hermes-workspace/storyforge-rebuild && npx tsc --noEmit 2>&1`
 Expected: No errors
 
 **Step 6: Commit**
 
 ```bash
-cd /c/Users/tiger/hermes-workspace/atticus-rebuild
+cd /c/Users/tiger/hermes-workspace/storyforge-rebuild
 git add src/lib/db/database.ts src/lib/db/bookPersistence.ts src/store/bookStore.ts src/app/page.tsx
 git commit -m "feat: add offline persistence with Dexie/IndexedDB"
 ```
@@ -1057,13 +1057,13 @@ Add before the closing `</aside>`:
 
 **Step 3: Run type check**
 
-Run: `cd /c/Users/tiger/hermes-workspace/atticus-rebuild && npx tsc --noEmit 2>&1`
+Run: `cd /c/Users/tiger/hermes-workspace/storyforge-rebuild && npx tsc --noEmit 2>&1`
 Expected: No errors
 
 **Step 4: Commit**
 
 ```bash
-cd /c/Users/tiger/hermes-workspace/atticus-rebuild
+cd /c/Users/tiger/hermes-workspace/storyforge-rebuild
 git add src/components/sidebar/WritingGoals.tsx src/components/sidebar/ChapterTree.tsx
 git commit -m "feat: add writing goals tracker panel"
 ```
@@ -1187,13 +1187,13 @@ Modify `src/app/page.tsx` — add ThemeSelector in the header.
 
 **Step 5: Run type check**
 
-Run: `cd /c/Users/tiger/hermes-workspace/atticus-rebuild && npx tsc --noEmit 2>&1`
+Run: `cd /c/Users/tiger/hermes-workspace/storyforge-rebuild && npx tsc --noEmit 2>&1`
 Expected: No errors
 
 **Step 6: Commit**
 
 ```bash
-cd /c/Users/tiger/hermes-workspace/atticus-rebuild
+cd /c/Users/tiger/hermes-workspace/storyforge-rebuild
 git add src/lib/themes/presets.ts src/components/themes/ThemeSelector.tsx src/components/editor/SceneEditor.tsx src/app/page.tsx
 git commit -m "feat: add theme system with 3 presets (Classic, Modern, Manuscript)"
 ```

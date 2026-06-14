@@ -1,4 +1,4 @@
-# Atticus Feature Audit — vs Robert's Checklist
+# StoryForge Feature Audit — vs Robert's Checklist
 
 > Date: 2026-06-14 | Phase 5 Complete | Build: ✅ TS: ✅ Tests: 34/34 ✅
 
@@ -117,8 +117,8 @@
 
 | Feature | Status | Notes |
 |---|---|---|
-| **Export backup** | ✅ | Export .atticus JSON backup file |
-| **Restore backup** | ✅ | Import .atticus JSON to restore |
+| **Export backup** | ✅ | Export .storyforge JSON backup file |
+| **Restore backup** | ✅ | Import .storyforge JSON to restore |
 | **Cloud sync** | ❌ | No real-time cloud sync (requires backend server) |
 | **Local auto-save** | ✅ | 1-second debounce to IndexedDB |
 

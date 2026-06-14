@@ -16,7 +16,7 @@ interface VersionRecord {
   createdAt: string;
 }
 
-const db = new Dexie('AtticusRebuild') as Dexie & {
+const db = new Dexie('StoryForgeRebuild') as Dexie & {
   books: EntityTable<BookRecord, 'id'>;
   versions: EntityTable<VersionRecord, 'id'>;
 };

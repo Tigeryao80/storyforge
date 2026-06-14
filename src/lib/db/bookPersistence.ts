@@ -1,7 +1,7 @@
 import { db } from './database';
 import type { Book } from '@/types/book';
 
-const ACTIVE_BOOK_KEY = 'atticus-active-book-id';
+const ACTIVE_BOOK_KEY = 'storyforge-active-book-id';
 
 export async function saveBook(book: Book): Promise<void> {
   await db.books.put({

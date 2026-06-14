@@ -1,7 +1,7 @@
 {
-  "name": "atticus-rebuild",
-  "version": "0.1.0",
-  "description": "Book writing & formatting app — Atticus alternative",
+  "name": "storyforge",
+  "version": "0.7.0",
+  "description": "StoryForge — Book writing, formatting & publishing app with AI co-author",
   "private": true,
   "scripts": {
     "dev": "next dev",

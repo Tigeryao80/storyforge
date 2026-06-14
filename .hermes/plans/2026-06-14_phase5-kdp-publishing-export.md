@@ -1,10 +1,10 @@
 # Phase 5 Plan — KDP Publishing Export (MOBI, Enhanced EPUB, Print-Ready PDF)
 
 > Created: 2026-06-14 | Status: Planned
-> Priority: CRITICAL — This is what makes Atticus a real KDP publishing tool
+> Priority: CRITICAL — This is what makes StoryForge a real KDP publishing tool
 
 ## Context
-Atticus.io's core value is one-click export to KDP-ready formats. Our rebuild must match or exceed this. The publishing pipeline (`PUBLISHING_DIRECTIVES.md`) requires EPUB, MOBI, and PDF exports that pass KDP compliance checks.
+StoryForge.io's core value is one-click export to KDP-ready formats. Our rebuild must match or exceed this. The publishing pipeline (`PUBLISHING_DIRECTIVES.md`) requires EPUB, MOBI, and PDF exports that pass KDP compliance checks.
 
 ## KDP Format Requirements
 

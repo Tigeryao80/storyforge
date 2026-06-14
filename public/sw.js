@@ -1,7 +1,7 @@
-// Service Worker for Atticus PWA
+// Service Worker for StoryForge PWA
 // Caches app shell and static assets for offline use
 
-const CACHE_NAME = 'atticus-v1';
+const CACHE_NAME = 'storyforge-v1';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',

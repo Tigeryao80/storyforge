@@ -13,8 +13,8 @@
 ### Task 4.2: Cloud Backup UI
 - Create `src/components/backup/CloudBackup.tsx` — UI panel for backup/sync status
 - Add cloud backup state to bookStore (lastBackupAt, backupStatus: 'idle'|'syncing'|'error'|'synced')
-- Implement export-to-JSON backup (download .atticus backup file)
-- Implement restore-from-JSON (upload .atticus file, replace current book)
+- Implement export-to-JSON backup (download .storyforge backup file)
+- Implement restore-from-JSON (upload .storyforge file, replace current book)
 
 ### Task 4.3: Writing Sprint Timer
 - Create `src/components/sprint/SprintTimer.tsx` — Pomodoro-style sprint timer

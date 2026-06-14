@@ -21,13 +21,13 @@ const ATTICUS_DIR = join(__dirname, '..', '..');
 
 // ── Types ──────────────────────────────────────────────────
 
-interface AtticusBook {
+interface StoryForgeBook {
   id: string;
   title: string;
   author: string;
   subtitle?: string;
   parts: unknown[];
-  chapters: AtticusChapter[];
+  chapters: StoryForgeChapter[];
   createdAt: string;
   updatedAt: string;
   wordCountGoal: number;
@@ -39,16 +39,16 @@ interface AtticusBook {
   dedicationText?: string;
 }
 
-interface AtticusChapter {
+interface StoryForgeChapter {
   id: string;
   title: string;
-  scenes: AtticusScene[];
+  scenes: SceneData[];
   order: number;
   collapsed: boolean;
   wordCountGoal: number;
 }
 
-interface AtticusScene {
+interface SceneData {
   id: string;
   title: string;
   content: string;
@@ -61,7 +61,7 @@ interface AtticusScene {
 const TOOLS: Tool[] = [
   {
     name: 'list_books',
-    description: 'List all .atticus book files in the hermes-output directory. Use to see what books Hermes has written.',
+    description: 'List all .storyforge book files in the hermes-output directory. Use to see what books Hermes has written.',
     inputSchema: {
       type: 'object',
       properties: {},
@@ -69,13 +69,13 @@ const TOOLS: Tool[] = [
   },
   {
     name: 'read_book',
-    description: 'Read a full .atticus book file and return its structure (title, author, chapters, scenes, word counts). Use to review what Hermes has written.',
+    description: 'Read a full .storyforge book file and return its structure (title, author, chapters, scenes, word counts). Use to review what Hermes has written.',
     inputSchema: {
       type: 'object',
       properties: {
         filename: {
           type: 'string',
-          description: 'Filename in hermes-output directory (e.g., "my-novel.atticus" or "chapter-03.atticus")',
+          description: 'Filename in hermes-output directory (e.g., "my-novel.storyforge" or "chapter-03.storyforge")',
         },
       },
       required: ['filename'],
@@ -97,7 +97,7 @@ const TOOLS: Tool[] = [
   },
   {
     name: 'get_chapter_text',
-    description: 'Get the full text content of a specific chapter from a .atticus file. Use when Hermes needs to review or continue a specific chapter.',
+    description: 'Get the full text content of a specific chapter from a .storyforge file. Use when Hermes needs to review or continue a specific chapter.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -115,7 +115,7 @@ const TOOLS: Tool[] = [
   },
   {
     name: 'check_formatting',
-    description: 'Validate a .atticus book file for formatting issues: missing headers, header hierarchy, empty chapters, KDP compliance. Returns list of issues found.',
+    description: 'Validate a .storyforge book file for formatting issues: missing headers, header hierarchy, empty chapters, KDP compliance. Returns list of issues found.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -173,13 +173,13 @@ const TOOLS: Tool[] = [
 
 // ── Helpers ────────────────────────────────────────────────
 
-function readBookFile(filename: string): AtticusBook {
+function readBookFile(filename: string): StoryForgeBook {
   const filepath = join(HERMES_OUTPUT_DIR, filename);
   if (!existsSync(filepath)) {
     throw new Error(`File not found: ${filename}`);
   }
   const content = readFileSync(filepath, 'utf-8');
-  return JSON.parse(content) as AtticusBook;
+  return JSON.parse(content) as StoryForgeBook;
 }
 
 function countWords(text: string): number {
@@ -191,10 +191,10 @@ function countWords(text: string): number {
 
 async function handleListBooks() {
   const files = readdirSync(HERMES_OUTPUT_DIR)
-    .filter(f => f.endsWith('.atticus') || f.endsWith('.json'));
+    .filter(f => f.endsWith('.storyforge') || f.endsWith('.json'));
 
   if (files.length === 0) {
-    return { content: [{ type: 'text' as const, text: 'No .atticus files found in hermes-output directory.' }] };
+    return { content: [{ type: 'text' as const, text: 'No .storyforge files found in hermes-output directory.' }] };
   }
 
   const list = files.map(f => {
@@ -412,9 +412,9 @@ async function handleValidateKDP(args: { filename: string }) {
 
 const server = new Server(
   {
-    name: 'atticus-mcp-server',
+    name: 'storyforge-mcp-server',
     version: '1.0.0',
-    description: 'MCP server for Atticus book writing app. Lets Hermes read books, check formatting, validate KDP compliance, and get word counts.',
+    description: 'MCP server for StoryForge book writing app. Lets Hermes read books, check formatting, validate KDP compliance, and get word counts.',
   },
   {
     capabilities: {
@@ -467,7 +467,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error('Atticus MCP Server running on stdio');
+  console.error('StoryForge MCP Server running on stdio');
 }
 
 main().catch(console.error);

@@ -1,7 +1,7 @@
 {
-  "name": "Atticus — Book Writing & Formatting",
-  "short_name": "Atticus",
-  "description": "Write, format, and export professional books. Free alternative to Atticus.io.",
+  "name": "StoryForge — Book Writing & Formatting",
+  "short_name": "StoryForge",
+  "description": "Write, format, and export professional books. Free alternative to StoryForge.io.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

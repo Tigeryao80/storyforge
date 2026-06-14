@@ -13,7 +13,7 @@ export interface GoogleFont {
 
 type SortBy = 'popularity' | 'trending' | 'alpha';
 
-const CACHE_KEY = 'atticus-google-fonts';
+const CACHE_KEY = 'storyforge-google-fonts';
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 const PAGE_SIZE = 50;
 
@@ -142,7 +142,7 @@ export function getCategories(): string[] {
  */
 export function getRecentFonts(): string[] {
   try {
-    const raw = localStorage.getItem('atticus-recent-fonts');
+    const raw = localStorage.getItem('storyforge-recent-fonts');
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
@@ -156,7 +156,7 @@ export function addRecentFont(family: string): void {
   try {
     const recent = getRecentFonts();
     const updated = [family, ...recent.filter((f) => f !== family)].slice(0, 10);
-    localStorage.setItem('atticus-recent-fonts', JSON.stringify(updated));
+    localStorage.setItem('storyforge-recent-fonts', JSON.stringify(updated));
   } catch {
     // ignore
   }

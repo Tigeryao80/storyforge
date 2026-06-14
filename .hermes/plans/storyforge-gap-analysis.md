@@ -1,6 +1,6 @@
-# Atticus Feature Gap Analysis & Complete Build Plan
+# StoryForge Feature Gap Analysis & Complete Build Plan
 
-## Atticus.io Feature Set (from research)
+## StoryForge.io Feature Set (from research)
 
 ### Writing
 - [x] Purpose-built book editor (rich text) — ✅ WE HAVE THIS
@@ -8,7 +8,7 @@
 - [x] Writing goals & habit tracker — ✅ WE HAVE THIS
 - [x] Word counter (per chapter + total) — ✅ WE HAVE THIS
 - [x] Scene/chapter hierarchy (parts → chapters → scenes) — ✅ WE HAVE THIS
-- [ ] **Parts/Volumes support** — ❌ MISSING (Atticus has parts/volumes above chapters)
+- [ ] **Parts/Volumes support** — ❌ MISSING (StoryForge has parts/volumes above chapters)
 - [ ] **Focus mode / distraction-free writing** — ❌ MISSING
 - [ ] **Typewriter scroll** — ❌ MISSING (cursor stays centered)
 
@@ -58,7 +58,7 @@
 
 ## Priority Build Order (Phases 3-6)
 
-### Phase 3: Formatting Engine (CRITICAL — matches Atticus core value)
+### Phase 3: Formatting Engine (CRITICAL — matches StoryForge core value)
 1. **17+ Book Templates** — Create 17 theme presets with 1,200+ combinations
 2. **Full Theme Builder UI** — Font picker (Google Fonts), color picker, spacing controls
 3. **Parts/Volumes** — Add Part layer above chapters in data model

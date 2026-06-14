@@ -1,6 +1,6 @@
 # Phase 7: Google Fonts Integration
 
-**Goal:** Integrate 1,500+ Google Fonts into Atticus so users can choose from the full Google Fonts library for their book's body text, headings, and accents.
+**Goal:** Integrate 1,500+ Google Fonts into StoryForge so users can choose from the full Google Fonts library for their book's body text, headings, and accents.
 
 **Profile:** coder (DeepSeek V4 Pro primary)
 **Workflow:** plan → subagent-driven-development → review → hindsight

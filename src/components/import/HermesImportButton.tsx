@@ -55,7 +55,7 @@ export default function HermesImportButton() {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".atticus,.json"
+        accept=".storyforge,.json"
         onChange={handleFileSelect}
         className="hidden"
       />
@@ -68,7 +68,7 @@ export default function HermesImportButton() {
             ? 'bg-red-100 text-red-700'
             : 'bg-purple-100 hover:bg-purple-200 text-purple-700'
         }`}
-        title="Import from Hermes (.atticus JSON)"
+        title="Import from Hermes (.storyforge JSON)"
       >
         {importStatus === 'idle' && '🐾 Hermes'}
         {importStatus === 'success' && `✓ ${statusMessage}`}

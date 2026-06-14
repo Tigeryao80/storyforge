@@ -185,7 +185,7 @@ export function parseHermesJSON(jsonString: string): BookImport {
     throw new Error('Invalid JSON: could not parse file');
   }
 
-  // Handle full .atticus format
+  // Handle full .storyforge format
   if (isBookImport(parsed)) {
     return parsed;
   }
@@ -211,7 +211,7 @@ export function parseHermesJSON(jsonString: string): BookImport {
     };
   }
 
-  throw new Error('Unrecognized format: expected .atticus JSON or Hermes chapter output');
+  throw new Error('Unrecognized format: expected .storyforge JSON or Hermes chapter output');
 }
 
 function isBookImport(data: unknown): data is BookImport {

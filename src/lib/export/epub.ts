@@ -108,7 +108,7 @@ export async function exportToEpub(book: Book, options?: EpubOptions): Promise<B
     {
       title: book.title || 'Untitled Book',
       author: book.author || 'Unknown Author',
-      publisher: 'Atticus Rebuild',
+      publisher: 'StoryForge Rebuild',
       description: options?.description || '',
       lang: options?.language || 'en',
       isbn: options?.isbn || '',

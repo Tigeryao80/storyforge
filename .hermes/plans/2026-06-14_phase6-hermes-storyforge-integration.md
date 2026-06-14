@@ -1,6 +1,6 @@
-# Phase 6: Hermes ↔ Atticus Integration
+# Phase 6: Hermes ↔ StoryForge Integration
 
-**Goal:** Connect Hermes AI agent to Atticus so Hermes can write stories directly into Atticus with proper formatting, and Atticus auto-formats everything for zero-friction novel publishing.
+**Goal:** Connect Hermes AI agent to StoryForge so Hermes can write stories directly into StoryForge with proper formatting, and StoryForge auto-formats everything for zero-friction novel publishing.
 
 **Profile:** coder (DeepSeek V4 Pro primary, GPT-5.4 Mini fallback, Owl Alpha fallback 2)
 **Workflow:** plan → writing-plans → subagent-driven-development → review → hindsight
@@ -13,8 +13,8 @@
 ┌─────────────────────────────────────────────────────────────┐
 │                      HERMES AGENT                           │
 │  - Writes chapters, scenes, dialogue, descriptions          │
-│  - Understands Atticus book structure (H1-H6, parts, etc.)  │
-│  - Calls Atticus tools via MCP or file bridge               │
+│  - Understands StoryForge book structure (H1-H6, parts, etc.)  │
+│  - Calls StoryForge tools via MCP or file bridge               │
 └──────────────────────┬──────────────────────────────────────┘
                        │
           ┌────────────┼────────────┐
@@ -32,7 +32,7 @@
 │  - Receives structured content from Hermes                  │
 │  - Auto-formats: headers, themes, TOC, page breaks          │
 │  - Exports: EPUB, PDF, MOBI, DOCX (KDP compliant)           │
-│  - Stores: IndexedDB (local) + .atticus JSON (portable)     │
+│  - Stores: IndexedDB (local) + .storyforge JSON (portable)     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -40,27 +40,27 @@
 
 ## Task Breakdown
 
-### Task 1: Hermes Atticus Writing Skill (P0 — Foundation)
-**File:** `~/.hermes/skills/atticus-writing/SKILL.md`
+### Task 1: Hermes StoryForge Writing Skill (P0 — Foundation)
+**File:** `~/.hermes/skills/storyforge-writing/SKILL.md`
 **Assignee:** coder profile (writing-plans skill)
 
 Create a Hermes skill that teaches the agent:
-- Atticus book data model (Book → Parts → Chapters → Scenes)
+- StoryForge book data model (Book → Parts → Chapters → Scenes)
 - Header hierarchy rules (H1=chapter, H2=scene, H3-H6=subsections)
 - Front matter vs body vs back matter structure
 - Formatting rules (callout boxes, block quotes, dialogue)
-- How to output `.atticus` JSON format
-- How to call Atticus API/MCP tools
+- How to output `.storyforge` JSON format
+- How to call StoryForge API/MCP tools
 
 **Acceptance Criteria:**
 - [ ] Skill file created with complete formatting rules
 - [ ] Hermes can generate a full chapter with correct H1/H2/H3 structure
-- [ ] Hermes output validates against Atticus JSON schema
+- [ ] Hermes output validates against StoryForge JSON schema
 - [ ] Skill includes examples of well-formatted novel content
 
 ---
 
-### Task 2: Atticus Import API (P0 — Core Bridge)
+### Task 2: StoryForge Import API (P0 — Core Bridge)
 **New files:**
 - `src/lib/api/bookImport.ts` — import parser/validator
 - `src/lib/api/types.ts` — API type definitions
@@ -99,32 +99,32 @@ function importScene(chapterId: string, scene: SceneImport): void
 
 ---
 
-### Task 3: Hermes → Atticus File Bridge (P0 — Works Today)
+### Task 3: Hermes → StoryForge File Bridge (P0 — Works Today)
 **New files:**
-- `src/lib/bridge/hermesBridge.ts` — watches for `.atticus` files, auto-imports
+- `src/lib/bridge/hermesBridge.ts` — watches for `.storyforge` files, auto-imports
 - `src/components/import/HermesImportButton.tsx` — UI button to import from Hermes
 
 **Modified files:**
 - `src/app/page.tsx` — add Hermes Import button to toolbar
 
-This is the simplest bridge: Hermes writes a `.atticus` JSON file → Atticus imports it.
+This is the simplest bridge: Hermes writes a `.storyforge` JSON file → StoryForge imports it.
 
 ```typescript
 // hermesBridge.ts
 export function parseHermesFile(jsonString: string): BookImport {
-  // Validate and parse Hermes-generated .atticus JSON
+  // Validate and parse Hermes-generated .storyforge JSON
   // Return BookImport object ready for importBook()
 }
 
 export function watchForHermesFiles(callback: (book: BookImport) => void): void {
-  // Optional: watch a directory for new .atticus files
+  // Optional: watch a directory for new .storyforge files
 }
 ```
 
 **Acceptance Criteria:**
 - [ ] Hermes Import button in toolbar
-- [ ] File picker selects `.atticus` JSON files
-- [ ] Parsed content creates proper book structure in Atticus
+- [ ] File picker selects `.storyforge` JSON files
+- [ ] Parsed content creates proper book structure in StoryForge
 - [ ] Invalid JSON shows user-friendly error message
 - [ ] Import preserves all formatting (headers, callouts, block quotes)
 
@@ -309,7 +309,7 @@ export interface BookVersion {
 ## File Inventory
 
 ### New Files (12)
-1. `~/.hermes/skills/atticus-writing/SKILL.md`
+1. `~/.hermes/skills/storyforge-writing/SKILL.md`
 2. `src/lib/api/bookImport.ts`
 3. `src/lib/api/types.ts`
 4. `src/lib/bridge/hermesBridge.ts`
@@ -344,8 +344,8 @@ export interface BookVersion {
 ## Execution Order
 
 **Wave 1 (Parallel — P0):**
-- Task 1: Hermes Atticus Writing Skill (skill creation)
-- Task 2: Atticus Import API (backend)
+- Task 1: Hermes StoryForge Writing Skill (skill creation)
+- Task 2: StoryForge Import API (backend)
 - Task 3: Hermes File Bridge (frontend)
 
 **Wave 2 (Parallel — P1):**
@@ -358,7 +358,7 @@ export interface BookVersion {
 - Task 8: Enhanced Footnotes + Per-Chapter Themes
 
 **Wave 4 (Sequential):**
-- Full integration test: Hermes writes chapter → Atticus imports → formats → exports
+- Full integration test: Hermes writes chapter → StoryForge imports → formats → exports
 - TypeScript zero errors
 - All tests passing
 - Build successful
@@ -370,7 +370,7 @@ export interface BookVersion {
 ## Acceptance Criteria (Phase Complete)
 
 - [ ] Hermes can write a full chapter with correct H1/H2/H3 structure
-- [ ] Hermes output imports into Atticus with zero manual formatting
+- [ ] Hermes output imports into StoryForge with zero manual formatting
 - [ ] Formatting validator detects and auto-fixes issues
 - [ ] Focus mode, typewriter scroll, keyboard shortcuts all work
 - [ ] H4/H5/H6 buttons in toolbar
@@ -386,7 +386,7 @@ export interface BookVersion {
 
 ---
 
-## Hermes Skill: Atticus Writing Format (Summary for Task 1)
+## Hermes Skill: StoryForge Writing Format (Summary for Task 1)
 
 The skill teaches Hermes these rules:
 
@@ -416,5 +416,5 @@ Use standard paragraph format with em-dashes or quotation marks
 (no special formatting needed)
 
 OUTPUT FORMAT:
-.atticus JSON matching the Book type in src/types/book.ts
+.storyforge JSON matching the Book type in src/types/book.ts
 ```

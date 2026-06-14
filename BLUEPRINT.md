@@ -1,10 +1,10 @@
 # ATTICUS REBUILD — Project Blueprint
 
 ## Objective
-Build a web-based book writing & formatting application inspired by Atticus (atticus.io).
+Build a web-based book writing & formatting application inspired by StoryForge (storyforge.io).
 Target: PWA that works offline, exports to EPUB/PDF/DOCX, with professional book formatting.
 
-## Feature Parity Target (from atticus.io)
+## Feature Parity Target (from storyforge.io)
 
 ### Writing
 - [ ] Purpose-built book editor (rich text, not plain markdown)
@@ -60,7 +60,7 @@ Target: PWA that works offline, exports to EPUB/PDF/DOCX, with professional book
 ## Architecture
 
 ```
-atticus-rebuild/
+storyforge-rebuild/
 ├── src/                    # React frontend
 │   ├── components/         # UI components
 │   ├── editor/             # Rich text editor module

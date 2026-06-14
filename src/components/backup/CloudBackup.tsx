@@ -25,7 +25,7 @@ export default function CloudBackup() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${book.title.replace(/[^a-zA-Z0-9]/g, '_')}_backup_${new Date().toISOString().split('T')[0]}.atticus`;
+      a.download = `${book.title.replace(/[^a-zA-Z0-9]/g, '_')}_backup_${new Date().toISOString().split('T')[0]}.storyforge`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -48,7 +48,7 @@ export default function CloudBackup() {
       const text = await file.text();
       const imported = JSON.parse(text);
       if (!imported.id || !imported.title || !Array.isArray(imported.chapters)) {
-        throw new Error('Invalid Atticus backup file');
+        throw new Error('Invalid StoryForge backup file');
       }
       // Restore the book via the store's setBookMeta — we'll use a direct store reset
       const store = useBookStore.getState();
@@ -113,7 +113,7 @@ export default function CloudBackup() {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".atticus,.json"
+        accept=".storyforge,.json"
         onChange={handleFileChange}
         className="hidden"
       />

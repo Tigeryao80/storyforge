@@ -14,7 +14,7 @@ const ATTICUS_DIR = join(__dirname, '..', '..');
 const TOOLS = [
     {
         name: 'list_books',
-        description: 'List all .atticus book files in the hermes-output directory. Use to see what books Hermes has written.',
+        description: 'List all .storyforge book files in the hermes-output directory. Use to see what books Hermes has written.',
         inputSchema: {
             type: 'object',
             properties: {},
@@ -22,13 +22,13 @@ const TOOLS = [
     },
     {
         name: 'read_book',
-        description: 'Read a full .atticus book file and return its structure (title, author, chapters, scenes, word counts). Use to review what Hermes has written.',
+        description: 'Read a full .storyforge book file and return its structure (title, author, chapters, scenes, word counts). Use to review what Hermes has written.',
         inputSchema: {
             type: 'object',
             properties: {
                 filename: {
                     type: 'string',
-                    description: 'Filename in hermes-output directory (e.g., "my-novel.atticus" or "chapter-03.atticus")',
+                    description: 'Filename in hermes-output directory (e.g., "my-novel.storyforge" or "chapter-03.storyforge")',
                 },
             },
             required: ['filename'],
@@ -50,7 +50,7 @@ const TOOLS = [
     },
     {
         name: 'get_chapter_text',
-        description: 'Get the full text content of a specific chapter from a .atticus file. Use when Hermes needs to review or continue a specific chapter.',
+        description: 'Get the full text content of a specific chapter from a .storyforge file. Use when Hermes needs to review or continue a specific chapter.',
         inputSchema: {
             type: 'object',
             properties: {
@@ -68,7 +68,7 @@ const TOOLS = [
     },
     {
         name: 'check_formatting',
-        description: 'Validate a .atticus book file for formatting issues: missing headers, header hierarchy, empty chapters, KDP compliance. Returns list of issues found.',
+        description: 'Validate a .storyforge book file for formatting issues: missing headers, header hierarchy, empty chapters, KDP compliance. Returns list of issues found.',
         inputSchema: {
             type: 'object',
             properties: {
@@ -139,9 +139,9 @@ function countWords(text) {
 // ── Tool Handlers ──────────────────────────────────────────
 async function handleListBooks() {
     const files = readdirSync(HERMES_OUTPUT_DIR)
-        .filter(f => f.endsWith('.atticus') || f.endsWith('.json'));
+        .filter(f => f.endsWith('.storyforge') || f.endsWith('.json'));
     if (files.length === 0) {
-        return { content: [{ type: 'text', text: 'No .atticus files found in hermes-output directory.' }] };
+        return { content: [{ type: 'text', text: 'No .storyforge files found in hermes-output directory.' }] };
     }
     const list = files.map(f => {
         try {
@@ -331,9 +331,9 @@ async function handleValidateKDP(args) {
 }
 // ── Server Setup ───────────────────────────────────────────
 const server = new Server({
-    name: 'atticus-mcp-server',
+    name: 'storyforge-mcp-server',
     version: '1.0.0',
-    description: 'MCP server for Atticus book writing app. Lets Hermes read books, check formatting, validate KDP compliance, and get word counts.',
+    description: 'MCP server for StoryForge book writing app. Lets Hermes read books, check formatting, validate KDP compliance, and get word counts.',
 }, {
     capabilities: {
         tools: {},
@@ -380,6 +380,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error('Atticus MCP Server running on stdio');
+    console.error('StoryForge MCP Server running on stdio');
 }
 main().catch(console.error);

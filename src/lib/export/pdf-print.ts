@@ -50,7 +50,7 @@ export async function exportToPrintPdf(book: Book, options: PdfExportOptions): P
     info: {
       Title: book.title || 'Untitled Book',
       Author: book.author || 'Unknown Author',
-      Creator: 'Atticus Rebuild',
+      Creator: 'StoryForge Rebuild',
       Producer: 'pdfkit',
     },
   });

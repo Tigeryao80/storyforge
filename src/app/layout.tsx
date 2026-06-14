@@ -2,13 +2,13 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Atticus — Book Writing & Formatting',
-  description: 'Write, format, and export professional books. Free alternative to Atticus.io.',
+  title: 'StoryForge — Book Writing & Formatting',
+  description: 'Write, format, and export professional books. Free alternative to StoryForge.io.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Atticus',
+    title: 'StoryForge',
   },
   formatDetection: {
     telephone: false,
