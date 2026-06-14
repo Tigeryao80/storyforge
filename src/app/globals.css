@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f3f4f6;
+  --foreground: #111827;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+/* TipTap editor styles */
+.ProseMirror {
+  min-height: 60vh;
+  outline: none;
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: #1a1a1a;
+}
+
+.ProseMirror h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: #111;
+}
+
+.ProseMirror h3 {
+  font-size: 1.375rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: #1f2937;
+}
+
+.ProseMirror p {
+  margin-bottom: 1rem;
+}
+
+.ProseMirror p:first-child {
+  text-indent: 0;
+}
+
+.ProseMirror p + p {
+  text-indent: 2em;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
