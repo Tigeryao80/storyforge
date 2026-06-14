@@ -40,6 +40,7 @@ function createTestBook(): Book {
     id: 'test-id',
     title: 'Test Book',
     author: 'Test Author',
+    parts: [],
     chapters: [chapter1, chapter2],
     createdAt: '2026-01-01',
     updatedAt: '2026-01-01',

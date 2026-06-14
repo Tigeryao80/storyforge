@@ -89,6 +89,7 @@ function createDefaultBook(): Book {
     id: uuidv4(),
     title: 'Untitled Book',
     author: '',
+    parts: [],
     chapters: [createEmptyChapter(0)],
     createdAt: now,
     updatedAt: now,

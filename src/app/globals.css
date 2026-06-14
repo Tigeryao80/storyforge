@@ -108,3 +108,61 @@ body {
   font-size: 0.75rem;
   vertical-align: super;
 }
+
+/* Drop caps — first letter of first paragraph */
+.drop-cap::first-letter {
+  float: left;
+  font-size: 3.5em;
+  line-height: 0.8;
+  padding-right: 0.1em;
+  padding-top: 0.05em;
+  font-weight: 700;
+  color: inherit;
+}
+
+/* Scene breaks */
+.scene-break {
+  text-align: center;
+  margin: 2rem 0;
+  border: none;
+  font-size: 1.2rem;
+  letter-spacing: 0.5em;
+  color: #666;
+}
+
+.scene-break-ornament::after {
+  content: attr(data-ornament);
+  display: block;
+}
+
+.scene-break-line::after {
+  content: '';
+  display: block;
+  width: 4em;
+  height: 1px;
+  background: currentColor;
+  margin: 0.5em auto;
+  opacity: 0.4;
+}
+
+.scene-break-spacing {
+  height: 2rem;
+}
+
+/* Full bleed images */
+.full-bleed {
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  margin-right: calc(-50vw + 50%);
+}
+
+.full-bleed img {
+  width: 100%;
+  display: block;
+}
+
+/* Print-specific */
+@media print {
+  .no-print { display: none !important; }
+  .ProseMirror { min-height: auto; }
+}

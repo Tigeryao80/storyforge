@@ -85,6 +85,7 @@ export async function importDocx(file: File): Promise<Book> {
     id: uuidv4(),
     title: file.name.replace('.docx', ''),
     author: '',
+    parts: [],
     chapters,
     createdAt: now,
     updatedAt: now,

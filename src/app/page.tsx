@@ -5,10 +5,11 @@ import dynamic from 'next/dynamic';
 import ChapterTree from '@/components/sidebar/ChapterTree';
 import WritingGoals from '@/components/sidebar/WritingGoals';
 import DocxImportButton from '@/components/import/DocxImportButton';
-import ThemeSelector from '@/components/themes/ThemeSelector';
+import ThemeBuilder from '@/components/themes/ThemeBuilder';
 import { exportToDocx } from '@/lib/export/docx';
 import { exportToEpub } from '@/lib/export/epub';
 import { exportToPdf } from '@/lib/export/pdf';
+import DevicePreview from '@/components/preview/DevicePreview';
 import { useBookStore } from '@/store/bookStore';
 import { loadMostRecentBook } from '@/lib/db/bookPersistence';
 
@@ -83,7 +84,9 @@ export default function Home() {
           <span>{book.chapters.length} chapters</span>
         </div>
 
-        <ThemeSelector />
+        <ThemeBuilder />
+
+        <DevicePreview />
 
         <div className="flex items-center gap-1">
           <button
