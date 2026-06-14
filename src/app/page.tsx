@@ -4,11 +4,11 @@ import { useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import ChapterTree from '@/components/sidebar/ChapterTree';
 import WritingGoals from '@/components/sidebar/WritingGoals';
+import ChapterGoals from '@/components/sidebar/ChapterGoals';
+import SprintTimer from '@/components/sprint/SprintTimer';
+import CloudBackup from '@/components/backup/CloudBackup';
 import DocxImportButton from '@/components/import/DocxImportButton';
 import ThemeBuilder from '@/components/themes/ThemeBuilder';
-import { exportToDocx } from '@/lib/export/docx';
-import { exportToEpub } from '@/lib/export/epub';
-import { exportToPdf } from '@/lib/export/pdf';
 import DevicePreview from '@/components/preview/DevicePreview';
 import { useBookStore } from '@/store/bookStore';
 import { loadMostRecentBook } from '@/lib/db/bookPersistence';
@@ -39,8 +39,10 @@ export default function Home() {
 
   const handleExport = async (format: 'docx' | 'epub' | 'pdf') => {
     if (format === 'docx') {
+      const { exportToDocx } = await import('@/lib/export/docx');
       await exportToDocx(book);
     } else if (format === 'epub') {
+      const { exportToEpub } = await import('@/lib/export/epub');
       const blob = await exportToEpub(book);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -49,6 +51,7 @@ export default function Home() {
       a.click();
       URL.revokeObjectURL(url);
     } else if (format === 'pdf') {
+      const { exportToPdf } = await import('@/lib/export/pdf');
       await exportToPdf(book);
     }
   };
@@ -117,9 +120,12 @@ export default function Home() {
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
         {sidebarOpen && (
-          <div className="flex flex-col h-full">
+          <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full overflow-y-auto shrink-0">
             <ChapterTree />
             <WritingGoals />
+            <ChapterGoals />
+            <SprintTimer />
+            <CloudBackup />
           </div>
         )}
 

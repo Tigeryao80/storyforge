@@ -1,7 +1,7 @@
-import PDFDocument from 'pdfkit';
 import type { Book } from '@/types/book';
 
 export async function exportToPdf(book: Book): Promise<void> {
+  const PDFDocument = (await import('pdfkit')).default;
   const doc = new (PDFDocument as any)({ margin: 72 });
   const chunks: Buffer[] = [];
 

@@ -1,7 +1,7 @@
-import Epub from 'epub-gen-memory';
 import type { Book } from '@/types/book';
 
 export async function exportToEpub(book: Book): Promise<Blob> {
+  const Epub = (await import('epub-gen-memory')).default;
   const htmlContent = generateHtmlContent(book);
 
   const epub = new (Epub as any)(

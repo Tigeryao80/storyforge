@@ -12,6 +12,7 @@ export interface Chapter {
   scenes: Scene[];
   order: number;
   collapsed: boolean;
+  wordCountGoal: number;
 }
 
 export interface Part {
@@ -60,7 +61,13 @@ export interface WritingGoal {
   totalWordsWritten: number;
 }
 
-export type ExportFormat = 'epub' | 'pdf' | 'docx' | 'mobi';
+export type BackupStatus = 'idle' | 'syncing' | 'error' | 'synced';
+
+export interface CloudBackup {
+  lastBackupAt: string | null;
+  status: BackupStatus;
+  errorMessage: string | null;
+}
 
 export const TRIM_SIZES = [
   { id: '5x8', name: '5" × 8"', width: 5, height: 8 },

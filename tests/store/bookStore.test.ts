@@ -21,6 +21,7 @@ function createTestBook(): Book {
     title: 'Chapter 1',
     order: 0,
     collapsed: false,
+    wordCountGoal: 0,
     scenes: [scene1, scene2],
   };
   const chapter2: Chapter = {
@@ -28,6 +29,7 @@ function createTestBook(): Book {
     title: 'Chapter 2',
     order: 1,
     collapsed: false,
+    wordCountGoal: 0,
     scenes: [{
       id: 'sc-3',
       title: 'Scene 1',
@@ -79,6 +81,7 @@ describe('bookStore', () => {
             title: 'Empty',
             order: 0,
             collapsed: false,
+            wordCountGoal: 0,
             scenes: [{
               id: 'sc-empty',
               title: 'Empty',

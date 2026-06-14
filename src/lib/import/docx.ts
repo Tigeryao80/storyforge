@@ -62,6 +62,7 @@ export async function importDocx(file: File): Promise<Book> {
       scenes: htmlToScenes(content),
       order: chapters.length,
       collapsed: false,
+      wordCountGoal: 0,
     });
   }
 
@@ -72,6 +73,7 @@ export async function importDocx(file: File): Promise<Book> {
       scenes: htmlToScenes(html),
       order: 0,
       collapsed: false,
+      wordCountGoal: 0,
     });
   }
 

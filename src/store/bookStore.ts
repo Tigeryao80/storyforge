@@ -2,8 +2,14 @@
 
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import type { Book, Chapter, Scene, BookTheme, WritingGoal } from '@/types/book';
+import type { Book, Chapter, Scene, BookTheme, WritingGoal, CloudBackup } from '@/types/book';
 import { saveBook } from '@/lib/db/bookPersistence';
+
+interface SprintSession {
+  startedAt: string;
+  endedAt: string;
+  wordsWritten: number;
+}
 
 interface BookState {
   book: Book;
@@ -12,6 +18,14 @@ interface BookState {
   theme: BookTheme;
   goal: WritingGoal;
   sidebarOpen: boolean;
+  backup: CloudBackup;
+  sprintActive: boolean;
+  sprintRemaining: number;
+  sprintDuration: number;
+  sprintsCompleted: number;
+  sprintHistory: SprintSession[];
+  sprintStartSnapshot: number;
+  sprintWordsWritten: number;
 
   // Chapter actions
   addChapter: (afterOrder?: number) => void;
@@ -42,6 +56,16 @@ interface BookState {
 
   // Computed
   getTotalWordCount: () => number;
+
+  // Backup actions
+  setBackupStatus: (status: CloudBackup['status'], errorMessage?: string) => void;
+
+  // Sprint actions
+  startSprint: (durationMinutes?: number) => void;
+  tickSprint: () => void;
+  stopSprint: () => void;
+  resetSprint: () => void;
+  setSprintDuration: (minutes: number) => void;
 }
 
 const defaultTheme: BookTheme = {
@@ -63,6 +87,12 @@ const defaultGoal: WritingGoal = {
   totalWordsWritten: 0,
 };
 
+const defaultBackup: CloudBackup = {
+  lastBackupAt: null,
+  status: 'idle',
+  errorMessage: null,
+};
+
 function createEmptyScene(order: number): Scene {
   return {
     id: uuidv4(),
@@ -80,6 +110,7 @@ function createEmptyChapter(order: number): Chapter {
     scenes: [createEmptyScene(0)],
     order,
     collapsed: false,
+    wordCountGoal: 0,
   };
 }
 
@@ -108,6 +139,14 @@ export const useBookStore = create<BookState>((set, get) => ({
   theme: defaultTheme,
   goal: defaultGoal,
   sidebarOpen: true,
+  backup: defaultBackup,
+  sprintActive: false,
+  sprintRemaining: 25 * 60,
+  sprintDuration: 25 * 60,
+  sprintsCompleted: 0,
+  sprintHistory: [],
+  sprintStartSnapshot: 0,
+  sprintWordsWritten: 0,
 
   addChapter: (afterOrder?: number) => {
     set((state) => {
@@ -272,6 +311,89 @@ export const useBookStore = create<BookState>((set, get) => ({
       (total, ch) => total + ch.scenes.reduce((chTotal, s) => chTotal + s.wordCount, 0),
       0
     );
+  },
+
+  // Cloud backup actions
+  setBackupStatus: (status: CloudBackup['status'], errorMessage?: string) => {
+    set((state) => ({
+      backup: {
+        ...state.backup,
+        status,
+        errorMessage: errorMessage ?? null,
+        lastBackupAt: status === 'synced' ? new Date().toISOString() : state.backup.lastBackupAt,
+      },
+    }));
+  },
+
+  // Sprint actions
+  startSprint: (durationMinutes: number = 25) => {
+    const state = get();
+    set({
+      sprintActive: true,
+      sprintRemaining: durationMinutes * 60,
+      sprintDuration: durationMinutes * 60,
+      sprintStartSnapshot: state.getTotalWordCount(),
+      sprintWordsWritten: 0,
+    });
+  },
+
+  tickSprint: () => {
+    set((state) => {
+      if (!state.sprintActive || state.sprintRemaining <= 0) return state;
+      const newRemaining = state.sprintRemaining - 1;
+      if (newRemaining <= 0) {
+        const wordsThisSprint = state.getTotalWordCount() - state.sprintStartSnapshot;
+        return {
+          sprintActive: false,
+          sprintRemaining: 0,
+          sprintsCompleted: state.sprintsCompleted + 1,
+          sprintWordsWritten: Math.max(0, wordsThisSprint),
+          sprintHistory: [
+            ...state.sprintHistory,
+            {
+              startedAt: new Date(Date.now() - state.sprintDuration * 1000).toISOString(),
+              endedAt: new Date().toISOString(),
+              wordsWritten: Math.max(0, wordsThisSprint),
+            },
+          ],
+        };
+      }
+      return { sprintRemaining: newRemaining };
+    });
+  },
+
+  stopSprint: () => {
+    const state = get();
+    if (!state.sprintActive) return;
+    const wordsThisSprint = state.getTotalWordCount() - state.sprintStartSnapshot;
+    set({
+      sprintActive: false,
+      sprintRemaining: state.sprintDuration,
+      sprintWordsWritten: Math.max(0, wordsThisSprint),
+      sprintHistory: [
+        ...state.sprintHistory,
+        {
+          startedAt: new Date(Date.now() - (state.sprintDuration - state.sprintRemaining) * 1000).toISOString(),
+          endedAt: new Date().toISOString(),
+          wordsWritten: Math.max(0, wordsThisSprint),
+        },
+      ],
+    });
+  },
+
+  resetSprint: () => {
+    set((state) => ({
+      sprintActive: false,
+      sprintRemaining: state.sprintDuration,
+      sprintWordsWritten: 0,
+    }));
+  },
+
+  setSprintDuration: (minutes: number) => {
+    set({
+      sprintDuration: minutes * 60,
+      sprintRemaining: minutes * 60,
+    });
   },
 }));
 
