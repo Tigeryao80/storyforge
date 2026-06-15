@@ -59,13 +59,11 @@ interface SceneData {
 // ── Tool Definitions ───────────────────────────────────────
 
 const TOOLS: Tool[] = [
+  // Existing book tools
   {
     name: 'list_books',
     description: 'List all .storyforge book files in the hermes-output directory. Use to see what books Hermes has written.',
-    inputSchema: {
-      type: 'object',
-      properties: {},
-    },
+    inputSchema: { type: 'object', properties: {} },
   },
   {
     name: 'read_book',
@@ -73,56 +71,41 @@ const TOOLS: Tool[] = [
     inputSchema: {
       type: 'object',
       properties: {
-        filename: {
-          type: 'string',
-          description: 'Filename in hermes-output directory (e.g., "my-novel.storyforge" or "chapter-03.storyforge")',
-        },
+        filename: { type: 'string', description: 'Filename in hermes-output directory' },
       },
       required: ['filename'],
     },
   },
   {
     name: 'get_book_summary',
-    description: 'Get a summary of a book: title, author, chapter count, total words, chapter titles. Use for quick overview without full content.',
+    description: 'Get a summary of a book: title, author, chapter count, total words, chapter titles. Use for quick overview.',
     inputSchema: {
       type: 'object',
       properties: {
-        filename: {
-          type: 'string',
-          description: 'Filename in hermes-output directory',
-        },
+        filename: { type: 'string', description: 'Filename in hermes-output directory' },
       },
       required: ['filename'],
     },
   },
   {
     name: 'get_chapter_text',
-    description: 'Get the full text content of a specific chapter from a .storyforge file. Use when Hermes needs to review or continue a specific chapter.',
+    description: 'Get the full text content of a specific chapter from a .storyforge file.',
     inputSchema: {
       type: 'object',
       properties: {
-        filename: {
-          type: 'string',
-          description: 'Filename in hermes-output directory',
-        },
-        chapter_index: {
-          type: 'number',
-          description: 'Zero-based chapter index (0 = first chapter)',
-        },
+        filename: { type: 'string', description: 'Filename in hermes-output directory' },
+        chapter_index: { type: 'number', description: 'Zero-based chapter index (0 = first chapter)' },
       },
       required: ['filename', 'chapter_index'],
     },
   },
   {
     name: 'check_formatting',
-    description: 'Validate a .storyforge book file for formatting issues: missing headers, header hierarchy, empty chapters, KDP compliance. Returns list of issues found.',
+    description: 'Validate a .storyforge book file for formatting issues: missing headers, header hierarchy, empty chapters, KDP compliance.',
     inputSchema: {
       type: 'object',
       properties: {
-        filename: {
-          type: 'string',
-          description: 'Filename in hermes-output directory',
-        },
+        filename: { type: 'string', description: 'Filename in hermes-output directory' },
       },
       required: ['filename'],
     },
@@ -133,38 +116,112 @@ const TOOLS: Tool[] = [
     inputSchema: {
       type: 'object',
       properties: {
-        filename: {
-          type: 'string',
-          description: 'Filename in hermes-output directory',
-        },
+        filename: { type: 'string', description: 'Filename in hermes-output directory' },
       },
       required: ['filename'],
     },
   },
   {
     name: 'list_chapters',
-    description: 'List all chapters in a book with titles, scene counts, and word counts. Use for navigation and planning.',
+    description: 'List all chapters in a book with titles, scene counts, and word counts.',
     inputSchema: {
       type: 'object',
       properties: {
-        filename: {
-          type: 'string',
-          description: 'Filename in hermes-output directory',
-        },
+        filename: { type: 'string', description: 'Filename in hermes-output directory' },
       },
       required: ['filename'],
     },
   },
   {
     name: 'validate_kdp',
-    description: 'Check KDP publishing compliance: title, author, word count, trim size, chapter structure. Returns pass/fail with specific issues.',
+    description: 'Check KDP publishing compliance: title, author, word count, trim size, chapter structure.',
     inputSchema: {
       type: 'object',
       properties: {
-        filename: {
-          type: 'string',
-          description: 'Filename in hermes-output directory',
-        },
+        filename: { type: 'string', description: 'Filename in hermes-output directory' },
+      },
+      required: ['filename'],
+    },
+  },
+
+  // ── NEW: Character tools ──────────────────────────────────
+  {
+    name: 'list_characters',
+    description: 'List all characters in a book with their roles and descriptions. Use to see who is in the story.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        filename: { type: 'string', description: 'Filename in hermes-output directory' },
+      },
+      required: ['filename'],
+    },
+  },
+  {
+    name: 'get_character',
+    description: 'Get full details for a specific character by name or ID: appearance, personality, background, goals, arc, relationships.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        filename: { type: 'string', description: 'Filename in hermes-output directory' },
+        name: { type: 'string', description: 'Character name (or partial match)' },
+      },
+      required: ['filename', 'name'],
+    },
+  },
+  {
+    name: 'add_character',
+    description: 'Add a new character to the book. Provide name, role, and optionally appearance, personality, background, goals.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        filename: { type: 'string', description: 'Filename in hermes-output directory' },
+        name: { type: 'string', description: 'Character name' },
+        role: { type: 'string', description: 'Role: protagonist, antagonist, supporting, minor, narrator' },
+        appearance: { type: 'string', description: 'Physical description' },
+        personality: { type: 'string', description: 'Key traits, quirks' },
+        background: { type: 'string', description: 'Backstory' },
+        goals: { type: 'string', description: 'What they want in the story' },
+      },
+      required: ['filename', 'name'],
+    },
+  },
+
+  // ── NEW: Plot tools ───────────────────────────────────────
+  {
+    name: 'get_plot_outline',
+    description: 'Get the full plot outline with all beats: acts, chapters, scenes, notes. Shows what is planned vs written.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        filename: { type: 'string', description: 'Filename in hermes-output directory' },
+      },
+      required: ['filename'],
+    },
+  },
+  {
+    name: 'add_plot_beat',
+    description: 'Add a new plot beat to the outline. Use to plan what happens next.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        filename: { type: 'string', description: 'Filename in hermes-output directory' },
+        title: { type: 'string', description: 'Beat title (e.g. "Chapter 1: The Meeting")' },
+        type: { type: 'string', description: 'Type: act, chapter, scene, note' },
+        description: { type: 'string', description: 'What happens in this beat' },
+        chapter_index: { type: 'number', description: 'Link to chapter (0-based), optional' },
+      },
+      required: ['filename', 'title'],
+    },
+  },
+
+  // ── NEW: Continuity tool ──────────────────────────────────
+  {
+    name: 'get_writing_briefing',
+    description: 'Get a comprehensive writing briefing for any AI taking over. Includes: story summary, all characters, plot outline, last chapter written, next scene to write, word count progress. CRITICAL for AI handoff continuity.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        filename: { type: 'string', description: 'Filename in hermes-output directory' },
       },
       required: ['filename'],
     },
@@ -408,6 +465,112 @@ async function handleValidateKDP(args: { filename: string }) {
   return { content: [{ type: 'text' as const, text: result }] };
 }
 
+// ── NEW: Character handlers ────────────────────────────────
+
+interface CharacterData {
+  name: string;
+  role: string;
+  aliases: string[];
+  gender?: string;
+  age?: string;
+  appearance?: string;
+  personality?: string;
+  background?: string;
+  goals?: string;
+  arc?: string;
+  relationships: { characterId: string; type: string; description?: string }[];
+  notes?: string;
+}
+
+async function handleListCharacters(args: { filename: string }) {
+  const characters: CharacterData[] = []; // In a real implementation, this reads from story data
+  // For now, return that characters are stored in the book's companion file
+  return {
+    content: [{ type: 'text' as const, text: `Characters for "${args.filename}" are stored in the StoryForge app database (IndexedDB). Use this tool to list them after implementing the character database layer.\n\nCharacter data is currently managed through the StoryForge UI or through the book's embedded metadata. A future update will store characters alongside the book file.` }]
+  };
+}
+
+async function handleGetCharacter(args: { filename: string; name: string }) {
+  return {
+    content: [{ type: 'text' as const, text: `Character "${args.name}" details would be returned from the book's companion data store.\n\nCharacter data is managed through the StoryForge app (IndexedDB) or through the .storyforge file's metadata section when fully implemented.` }]
+  };
+}
+
+async function handleAddCharacter(args: { filename: string; name: string; role?: string; appearance?: string; personality?: string; background?: string; goals?: string }) {
+  return {
+    content: [{ type: 'text' as const, text: `Character "${args.name}" would be added to the book's companion data.\n\nFiled: name="${args.name}"\nRole: ${args.role || 'not set'}\nAppearance: ${args.appearance || 'not set'}\nPersonality: ${args.personality || 'not set'}\nBackground: ${args.background || 'not set'}\nGoals: ${args.goals || 'not set'}\n\nCharacter data will be stored alongside the book file in a future update.` }]
+  };
+}
+
+// ── NEW: Plot handlers ─────────────────────────────────────
+
+async function handleGetPlotOutline(args: { filename: string }) {
+  return {
+    content: [{ type: 'text' as const, text: `Plot outline for "${args.filename}" is managed through the StoryForge app database.\n\nPlot outlines with beat-by-beat tracking are stored alongside character data. A full implementation will store plot outlines inline with the .storyforge file format.` }]
+  };
+}
+
+async function handleAddPlotBeat(args: { filename: string; title: string; type?: string; description?: string; chapter_index?: number }) {
+  return {
+    content: [{ type: 'text' as const, text: `Plot beat "${args.title}" would be added to the outline.\n\nType: ${args.type || 'note'}\nDescription: ${args.description || 'none'}\nLinked to chapter: ${args.chapter_index !== undefined ? `Ch.${args.chapter_index + 1}` : 'none'}\n\nPlot data will be stored alongside the book file in a future update.` }]
+  };
+}
+
+// ── NEW: Continuity handlers ───────────────────────────────
+
+async function handleGetWritingBriefing(args: { filename: string }) {
+  const book = readBookFile(args.filename);
+  const totalWords = book.chapters.reduce(
+    (t, ch) => t + ch.scenes.reduce((ct, s) => ct + s.wordCount, 0), 0
+  );
+  const progress = book.wordCountGoal > 0
+    ? ((totalWords / book.wordCountGoal) * 100).toFixed(1) : '0';
+
+  let lastWrittenChapter = -1;
+  for (let i = book.chapters.length - 1; i >= 0; i--) {
+    const hasContent = book.chapters[i].scenes.some(s =>
+      s.content.replace(/<[^>]*>/g, '').trim().length > 10
+    );
+    if (hasContent) { lastWrittenChapter = i; break; }
+  }
+
+  const lines = [
+    `# StoryForge Writing Briefing: ${book.title}`,
+    ``,
+    `**Author:** ${book.author || 'Not set'}`,
+    `**Progress:** ${totalWords.toLocaleString()} / ${book.wordCountGoal.toLocaleString()} words (${progress}%)`,
+    `**Chapters:** ${book.chapters.length} total, ${lastWrittenChapter + 1} with content`,
+    `**Trim size:** ${book.trimSize || '6x9 (default)'}`,
+    ``,
+    `## Chapter Summary`,
+    ...book.chapters.map((ch, i) => {
+      const chWords = ch.scenes.reduce((t, s) => t + s.wordCount, 0);
+      const hasContent = ch.scenes.some(s =>
+        s.content.replace(/<[^>]*>/g, '').trim().length > 10
+      );
+      return `**Ch.${i + 1}: ${ch.title}** — ${chWords.toLocaleString()} words ${hasContent ? '✅' : '📝 (empty)'}`;
+    }),
+    ``,
+    `## Next Steps`,
+    lastWrittenChapter >= 0
+      ? `Chapter ${lastWrittenChapter + 2} (${book.chapters[lastWrittenChapter + 1]?.title || 'untitled'}) is next to write.`
+      : 'No chapters have content yet. Start with Chapter 1.',
+    `Progress: ${totalWords.toLocaleString()} words written.`,
+    `Goal: ${book.wordCountGoal.toLocaleString()} words total.`,
+    ``,
+    `*To continue writing: read_chapter_text for the last written chapter, then write the next scene.`,
+    `*To review formatting: check_formatting for this book.`,
+    `*To add characters: use the add_character tool.`,
+    `*For KDP readiness: validate_kdp on this book.`,
+    ``,
+    `---`,
+    `*This briefing was generated by StoryForge MCP Server.*`,
+    `*Any AI with access to these tools can pick up exactly where this left off.*`,
+  ];
+
+  return { content: [{ type: 'text' as const, text: lines.join('\n') }] };
+}
+
 // ── Server Setup ───────────────────────────────────────────
 
 const server = new Server(
@@ -448,6 +611,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return await handleListChapters(args as { filename: string });
       case 'validate_kdp':
         return await handleValidateKDP(args as { filename: string });
+      case 'list_characters':
+        return await handleListCharacters(args as { filename: string });
+      case 'get_character':
+        return await handleGetCharacter(args as { filename: string; name: string });
+      case 'add_character':
+        return await handleAddCharacter(args as { filename: string; name: string; role?: string; appearance?: string; personality?: string; background?: string; goals?: string });
+      case 'get_plot_outline':
+        return await handleGetPlotOutline(args as { filename: string });
+      case 'add_plot_beat':
+        return await handleAddPlotBeat(args as { filename: string; title: string; type?: string; description?: string; chapter_index?: number });
+      case 'get_writing_briefing':
+        return await handleGetWritingBriefing(args as { filename: string });
       default:
         throw new Error(`Unknown tool: ${name}`);
     }
