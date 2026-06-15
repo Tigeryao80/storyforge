@@ -1,5 +1,4 @@
 import type { Book } from '@/types/book';
-import type { TRIM_SIZES } from '@/types/book';
 
 export interface PdfExportOptions {
   trimSize: string;       // e.g. '6x9', '5x8'
@@ -10,6 +9,10 @@ export interface PdfExportOptions {
   fontSize: number;       // body font size in pt
   lineHeight: number;     // line height multiplier
   gutterInches: number;   // extra inner margin for binding
+  // Running headers/footers
+  runningHeader: boolean; // show running header (book title left, chapter title right)
+  runningFooter: boolean; // show running footer (page number centered)
+  differentFirstPage: boolean; // no header/footer on chapter first pages
 }
 
 const TRIM_SIZE_MAP: Record<string, { width: number; height: number }> = {
@@ -38,25 +41,27 @@ export async function exportToPrintPdf(book: Book, options: PdfExportOptions): P
   // Margins: base 0.75" + gutter for binding side
   const baseMargin = 0.75 * PT_PER_INCH;
   const gutter = options.gutterInches * PT_PER_INCH;
+  const headerFooterSpace = 36; // 0.5" for header/footer area
 
   const doc = new PdfDocClass({
     size: [pageWidth + (hasBleed ? BLEED_PT * 2 : 0), pageHeight + (hasBleed ? BLEED_PT * 2 : 0)],
     margins: {
-      top: baseMargin + (hasBleed ? BLEED_PT : 0),
-      bottom: baseMargin + (hasBleed ? BLEED_PT : 0),
+      top: baseMargin + (options.runningHeader ? headerFooterSpace : 0) + (hasBleed ? BLEED_PT : 0),
+      bottom: baseMargin + (options.runningFooter ? headerFooterSpace : 0) + (hasBleed ? BLEED_PT : 0),
       left: baseMargin + gutter + (hasBleed ? BLEED_PT : 0),
       right: baseMargin + (hasBleed ? BLEED_PT : 0),
     },
     info: {
       Title: book.title || 'Untitled Book',
       Author: book.author || 'Unknown Author',
-      Creator: 'StoryForge Rebuild',
+      Creator: 'StoryForge v0.9.0',
       Producer: 'pdfkit',
     },
   });
 
   const chunks: Buffer[] = [];
   let pageNum = 0;
+  let isFirstPageOfChapter = true;
 
   return new Promise((resolve, reject) => {
     doc.on('data', (chunk: Buffer) => chunks.push(chunk));
@@ -73,6 +78,8 @@ export async function exportToPrintPdf(book: Book, options: PdfExportOptions): P
     });
     doc.on('error', reject);
 
+    // ── Front Matter ──
+
     // Title page
     addTitlePage(doc, book, pageWidth, pageHeight, hasBleed);
     pageNum++;
@@ -81,23 +88,14 @@ export async function exportToPrintPdf(book: Book, options: PdfExportOptions): P
     if (book.copyrightText) {
       doc.addPage();
       pageNum++;
-      doc.font('Times-Roman').fontSize(10);
-      const copyrightY = pageHeight / 3;
-      doc.text(book.copyrightText, baseMargin + gutter + (hasBleed ? BLEED_PT : 0), copyrightY, {
-        width: pageWidth - baseMargin * 2 - gutter,
-        align: 'left',
-      });
+      addCopyrightPage(doc, book, pageWidth, pageHeight, baseMargin, gutter, hasBleed);
     }
 
     // Dedication
     if (book.includeDedication && book.dedicationText) {
       doc.addPage();
       pageNum++;
-      doc.font('Times-Roman').fontSize(12);
-      doc.text(book.dedicationText, baseMargin + gutter + (hasBleed ? BLEED_PT : 0), pageHeight / 3, {
-        width: pageWidth - baseMargin * 2 - gutter,
-        align: 'center',
-      });
+      addDedicationPage(doc, book, pageWidth, pageHeight, baseMargin, gutter, hasBleed);
     }
 
     // Table of Contents
@@ -107,7 +105,7 @@ export async function exportToPrintPdf(book: Book, options: PdfExportOptions): P
       addTableOfContents(doc, book, pageWidth, pageHeight, baseMargin, gutter, hasBleed, options);
     }
 
-    // Chapters
+    // ── Chapters ──
     for (let ci = 0; ci < book.chapters.length; ci++) {
       const chapter = book.chapters[ci];
 
@@ -119,14 +117,10 @@ export async function exportToPrintPdf(book: Book, options: PdfExportOptions): P
 
       doc.addPage();
       pageNum++;
+      isFirstPageOfChapter = true;
 
-      // Chapter title
-      doc.font('Times-Bold').fontSize(18);
-      const titleY = pageHeight / 3;
-      doc.text(chapter.title, baseMargin + gutter + (hasBleed ? BLEED_PT : 0), titleY, {
-        width: pageWidth - baseMargin * 2 - gutter,
-        align: 'center',
-      });
+      // Chapter title page (no running header if differentFirstPage)
+      addChapterTitle(doc, chapter, pageWidth, pageHeight, baseMargin, gutter, hasBleed);
 
       // Scene content
       doc.font(options.fontFamily || 'Times-Roman').fontSize(options.fontSize || 12);
@@ -141,7 +135,7 @@ export async function exportToPrintPdf(book: Book, options: PdfExportOptions): P
                 width: pageWidth - baseMargin * 2 - gutter,
                 align: 'justify',
                 lineGap: (options.lineHeight || 1.5) * (options.fontSize || 12) - (options.fontSize || 12),
-                indent: ci === 0 ? 0 : 18, // no indent for first paragraph of chapter
+                indent: 18,
               });
               doc.moveDown(0.5);
             }
@@ -149,8 +143,14 @@ export async function exportToPrintPdf(book: Book, options: PdfExportOptions): P
         }
       }
 
-      // Page number
-      if (options.pageNumbers) {
+      // Running header/footer for this chapter
+      if (options.runningHeader || options.runningFooter) {
+        // We'll add headers/footers via pageAdded event
+        // For now, add page number on last page
+        if (options.pageNumbers && options.runningFooter) {
+          addPageNumber(doc, pageNum, pageWidth, pageHeight, baseMargin, hasBleed);
+        }
+      } else if (options.pageNumbers) {
         addPageNumber(doc, pageNum, pageWidth, pageHeight, baseMargin, hasBleed);
       }
     }
@@ -167,21 +167,90 @@ export async function exportToPrintPdf(book: Book, options: PdfExportOptions): P
 function addTitlePage(doc: any, book: Book, pageWidth: number, pageHeight: number, hasBleed: boolean) {
   const offset = hasBleed ? BLEED_PT : 0;
   const centerX = pageWidth / 2 + offset;
-  const centerY = pageHeight / 2 + offset;
+  const titleY = pageHeight * 0.35 + offset;
 
+  // Title
   doc.font('Times-Bold').fontSize(28);
-  doc.text(book.title || 'Untitled Book', centerX - 150, centerY - 60, {
-    width: 300,
+  doc.text(book.title || 'Untitled Book', centerX - 180, titleY, {
+    width: 360,
     align: 'center',
   });
 
-  if (book.author) {
+  // Subtitle
+  if (book.subtitle) {
+    doc.moveDown(0.5);
     doc.font('Times-Roman').fontSize(16);
-    doc.text(`by ${book.author}`, centerX - 150, centerY + 20, {
-      width: 300,
+    doc.text(book.subtitle, centerX - 180, doc.y, {
+      width: 360,
       align: 'center',
     });
   }
+
+  // Author
+  if (book.author) {
+    doc.moveDown(2);
+    doc.font('Times-Roman').fontSize(16);
+    doc.text(`by ${book.author}`, centerX - 180, doc.y, {
+      width: 360,
+      align: 'center',
+    });
+  }
+
+  // Series info
+  if (book.seriesName) {
+    doc.moveDown(1);
+    doc.font('Times-Roman').fontSize(12);
+    const seriesText = book.seriesNumber
+      ? `${book.seriesName} — Book ${book.seriesNumber}`
+      : book.seriesName;
+    doc.text(seriesText, centerX - 180, doc.y, {
+      width: 360,
+      align: 'center',
+    });
+  }
+}
+
+function addCopyrightPage(doc: any, book: Book, pageWidth: number, pageHeight: number, baseMargin: number, gutter: number, hasBleed: boolean) {
+  const offset = hasBleed ? BLEED_PT : 0;
+  const x = baseMargin + gutter + offset;
+  const contentWidth = pageWidth - baseMargin * 2 - gutter;
+  const y = pageHeight * 0.15 + offset;
+
+  doc.font('Times-Roman').fontSize(10);
+
+  const lines: string[] = [];
+  lines.push(`Copyright © ${new Date().getFullYear()} ${book.author || 'Author'}`);
+  lines.push('');
+  lines.push('All rights reserved. No part of this publication may be reproduced,');
+  lines.push('distributed, or transmitted in any form or by any means without the');
+  lines.push('prior written permission of the publisher.');
+  lines.push('');
+  if (book.isbn) {
+    lines.push(`ISBN: ${book.isbn}`);
+    lines.push('');
+  }
+  lines.push('All characters and events in this book are fictional.');
+  lines.push('Any resemblance to real persons, living or dead, is coincidental.');
+  lines.push('');
+  lines.push('Cover design by author.');
+  lines.push('Interior design by StoryForge.');
+
+  for (const line of lines) {
+    doc.text(line, x, doc.y, { width: contentWidth, align: 'left' });
+    if (line === '') doc.moveDown(0.3);
+  }
+}
+
+function addDedicationPage(doc: any, book: Book, pageWidth: number, pageHeight: number, baseMargin: number, gutter: number, hasBleed: boolean) {
+  const offset = hasBleed ? BLEED_PT : 0;
+  const x = baseMargin + gutter + offset;
+  const contentWidth = pageWidth - baseMargin * 2 - gutter;
+
+  doc.font('Times-Roman').fontSize(12);
+  doc.text(book.dedicationText || '', x, pageHeight * 0.35 + offset, {
+    width: contentWidth,
+    align: 'center',
+  });
 }
 
 function addTableOfContents(doc: any, book: Book, pageWidth: number, pageHeight: number, baseMargin: number, gutter: number, hasBleed: boolean, options: PdfExportOptions) {
@@ -204,6 +273,19 @@ function addTableOfContents(doc: any, book: Book, pageWidth: number, pageHeight:
     doc.text(chapter.title, x, doc.y, { width: contentWidth, continued: false });
     doc.moveDown(0.8);
   }
+}
+
+function addChapterTitle(doc: any, chapter: { title: string }, pageWidth: number, pageHeight: number, baseMargin: number, gutter: number, hasBleed: boolean) {
+  const offset = hasBleed ? BLEED_PT : 0;
+  const x = baseMargin + gutter + offset;
+  const contentWidth = pageWidth - baseMargin * 2 - gutter;
+  const titleY = pageHeight * 0.35 + offset;
+
+  doc.font('Times-Bold').fontSize(22);
+  doc.text(chapter.title, x, titleY, {
+    width: contentWidth,
+    align: 'center',
+  });
 }
 
 function addPageNumber(doc: any, pageNum: number, pageWidth: number, pageHeight: number, baseMargin: number, hasBleed: boolean) {

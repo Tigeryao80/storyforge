@@ -41,6 +41,17 @@ export interface Book {
   includeDedication?: boolean;
   copyrightText?: string;
   dedicationText?: string;
+  // KDP metadata
+  bookDescription?: string;
+  amazonKeywords?: string[];
+  bisacCategories?: string[];
+  seriesName?: string;
+  seriesNumber?: number;
+  penName?: string;
+  isbn?: string;
+  coverImageUrl?: string;
+  backCoverBlurb?: string;
+  authorBio?: string;
 }
 
 export interface BookTheme {

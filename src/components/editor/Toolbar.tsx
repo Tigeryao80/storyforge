@@ -75,7 +75,15 @@ export default function Toolbar({ editor }: ToolbarProps) {
 
       <div className="w-px h-5 bg-gray-300 mx-1" />
 
-      {/* Headings H2-H6 */}
+      {/* Headings H1-H6 */}
+      <button
+        type="button"
+        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+        className={btnClass(editor.isActive('heading', { level: 1 }))}
+        title="Heading 1 / Chapter Title (Ctrl+1)"
+      >
+        H1
+      </button>
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}

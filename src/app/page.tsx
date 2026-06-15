@@ -207,10 +207,10 @@ export default function Home() {
 
       {/* Status bar */}
       <footer className="h-8 bg-gray-50 border-t border-gray-200 flex items-center px-4 text-xs text-gray-500 gap-4 shrink-0">
-        <span>StoryForge Rebuild v0.6.0</span>
+        <span>StoryForge Rebuild v0.9.0</span>
         <span className="flex-1" />
         <span>
-          Shortcuts: Ctrl+B/I/U = format · Ctrl+2-6 = headings · Ctrl+Shift+F = focus · Ctrl+Shift+E = export
+          Shortcuts: Ctrl+B/I/U = format · Ctrl+1-6 = headings · Ctrl+Shift+F = focus · Ctrl+Shift+E = export
         </span>
       </footer>
 

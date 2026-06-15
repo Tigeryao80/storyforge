@@ -26,6 +26,7 @@ interface ExportSettingsProps {
 
 export default function ExportSettings({ onClose }: ExportSettingsProps) {
   const book = useBookStore((s) => s.book);
+  const setBookMeta = useBookStore((s) => s.setBookMeta);
   const [format, setFormat] = useState<'epub' | 'mobi' | 'pdf' | 'docx' | 'cover'>('epub');
   const [trimSize, setTrimSize] = useState('6x9');
   const [bleed, setBleed] = useState(true);
@@ -34,8 +35,23 @@ export default function ExportSettings({ onClose }: ExportSettingsProps) {
   const [fontFamily, setFontFamily] = useState('Times-Roman');
   const [fontSize, setFontSize] = useState(12);
   const [gutter, setGutter] = useState(0.75);
+  // Running headers/footers
+  const [runningHeader, setRunningHeader] = useState(true);
+  const [runningFooter, setRunningFooter] = useState(true);
+  const [differentFirstPage, setDifferentFirstPage] = useState(true);
+  // Cover options
+  const [coverImageUrl, setCoverImageUrl] = useState(book.coverImageUrl || '');
+  const [backCoverBlurb, setBackCoverBlurb] = useState(book.backCoverBlurb || '');
+  const [authorBio, setAuthorBio] = useState(book.authorBio || '');
+  // KDP metadata
+  const [kdpIsbn, setKdpIsbn] = useState(book.isbn || '');
+  const [kdpDescription, setKdpDescription] = useState(book.bookDescription || '');
+  const [kdpSeriesName, setKdpSeriesName] = useState(book.seriesName || '');
+  const [kdpSeriesNumber, setKdpSeriesNumber] = useState(book.seriesNumber?.toString() || '');
+  const [kdpPenName, setKdpPenName] = useState(book.penName || '');
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'format' | 'kdp'>('format');
 
   const pageCount = estimatePageCount(book);
   const spineWidth = calculateSpineWidth(pageCount);
@@ -69,6 +85,9 @@ export default function ExportSettings({ onClose }: ExportSettingsProps) {
             fontSize,
             lineHeight: 1.5,
             gutterInches: gutter,
+            runningHeader,
+            runningFooter,
+            differentFirstPage,
           };
           await exportToPrintPdf(book, pdfOpts);
           break;
@@ -77,6 +96,9 @@ export default function ExportSettings({ onClose }: ExportSettingsProps) {
           const coverOpts: CoverOptions = {
             trimSize,
             pageCount,
+            coverImageUrl: coverImageUrl || undefined,
+            backCoverBlurb: backCoverBlurb || undefined,
+            authorBio: authorBio || undefined,
           };
           await exportCoverPdf(book, coverOpts);
           break;
@@ -88,7 +110,7 @@ export default function ExportSettings({ onClose }: ExportSettingsProps) {
     } finally {
       setExporting(false);
     }
-  }, [format, trimSize, bleed, pageNumbers, includeToc, fontFamily, fontSize, gutter, book, onClose]);
+  }, [format, trimSize, bleed, pageNumbers, includeToc, fontFamily, fontSize, gutter, runningHeader, runningFooter, differentFirstPage, coverImageUrl, backCoverBlurb, authorBio, book, onClose]);
 
   const handleExportAll = useCallback(async () => {
     setExporting(true);
@@ -104,10 +126,16 @@ export default function ExportSettings({ onClose }: ExportSettingsProps) {
       const pdfOpts: PdfExportOptions = {
         trimSize, bleed, pageNumbers, includeToc,
         fontFamily, fontSize, lineHeight: 1.5, gutterInches: gutter,
+        runningHeader, runningFooter, differentFirstPage,
       };
       await exportToPrintPdf(book, pdfOpts);
 
-      const coverOpts: CoverOptions = { trimSize, pageCount };
+      const coverOpts: CoverOptions = {
+        trimSize, pageCount,
+        coverImageUrl: coverImageUrl || undefined,
+        backCoverBlurb: backCoverBlurb || undefined,
+        authorBio: authorBio || undefined,
+      };
       await exportCoverPdf(book, coverOpts);
 
       onClose();
@@ -116,112 +144,343 @@ export default function ExportSettings({ onClose }: ExportSettingsProps) {
     } finally {
       setExporting(false);
     }
-  }, [book, trimSize, bleed, pageNumbers, includeToc, fontFamily, fontSize, gutter, pageCount, onClose]);
+  }, [book, trimSize, bleed, pageNumbers, includeToc, fontFamily, fontSize, gutter, runningHeader, runningFooter, differentFirstPage, coverImageUrl, backCoverBlurb, authorBio, onClose]);
+
+  const handleSaveKdpMeta = useCallback(() => {
+    // Save KDP metadata to the book store
+    useBookStore.setState((state) => ({
+      book: {
+        ...state.book,
+        isbn: kdpIsbn || undefined,
+        bookDescription: kdpDescription || undefined,
+        seriesName: kdpSeriesName || undefined,
+        seriesNumber: kdpSeriesNumber ? parseInt(kdpSeriesNumber, 10) : undefined,
+        penName: kdpPenName || undefined,
+        coverImageUrl: coverImageUrl || undefined,
+        backCoverBlurb: backCoverBlurb || undefined,
+        authorBio: authorBio || undefined,
+        updatedAt: new Date().toISOString(),
+      },
+    }));
+  }, [kdpIsbn, kdpDescription, kdpSeriesName, kdpSeriesNumber, kdpPenName, coverImageUrl, backCoverBlurb, authorBio]);
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-gray-800">Export for KDP</h2>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
           </div>
 
-          {/* Format selection */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Format</label>
-            <div className="flex flex-wrap gap-2">
-              {(['epub', 'mobi', 'pdf', 'docx', 'cover'] as const).map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setFormat(f)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
-                    format === f
-                      ? 'bg-blue-100 text-blue-700 ring-1 ring-blue-300'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  {f === 'cover' ? 'Cover PDF' : f.toUpperCase()}
-                </button>
-              ))}
-            </div>
+          {/* Tab switcher */}
+          <div className="flex gap-1 mb-4 bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setActiveTab('format')}
+              className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                activeTab === 'format' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              📄 Format & Layout
+            </button>
+            <button
+              onClick={() => setActiveTab('kdp')}
+              className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                activeTab === 'kdp' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              🏪 KDP Metadata
+            </button>
           </div>
 
-          {/* Trim size (for PDF and Cover) */}
-          {(format === 'pdf' || format === 'cover') && (
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Trim Size</label>
-              <select
-                value={trimSize}
-                onChange={(e) => setTrimSize(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-300"
-              >
-                {TRIM_SIZES.map((ts) => (
-                  <option key={ts.id} value={ts.id}>{ts.name}</option>
-                ))}
-              </select>
-              <p className="text-xs text-gray-400 mt-1">
-                Est. page count: {pageCount} · Spine: {spineWidth.toFixed  (3)}"
-              </p>
-            </div>
-          )}
-
-          {/* PDF-specific options */}
-          {format === 'pdf' && (
+          {/* ── Format & Layout Tab ── */}
+          {activeTab === 'format' && (
             <>
-              <div className="mb-4 grid grid-cols-2 gap-3">
-                <label className="flex items-center gap-2 text-sm text-gray-700">
-                  <input type="checkbox" checked={bleed} onChange={(e) => setBleed(e.target.checked)} className="rounded" />
-                  Bleed marks
-                </label>
-                <label className="flex items-center gap-2 text-sm text-gray-700">
-                  <input type="checkbox" checked={pageNumbers} onChange={(e) => setPageNumbers(e.target.checked)} className="rounded" />
-                  Page numbers
-                </label>
-                <label className="flex items-center gap-2 text-sm text-gray-700">
-                  <input type="checkbox" checked={includeToc} onChange={(e) => setIncludeToc(e.target.checked)} className="rounded" />
-                  Table of Contents
-                </label>
+              {/* Format selection */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Format</label>
+                <div className="flex flex-wrap gap-2">
+                  {(['epub', 'mobi', 'pdf', 'docx', 'cover'] as const).map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setFormat(f)}
+                      className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                        format === f
+                          ? 'bg-blue-100 text-blue-700 ring-1 ring-blue-300'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {f === 'cover' ? 'Cover PDF' : f.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <div className="mb-4 grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Body Font</label>
-                  <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} className="w-full px-2 py-1.5 text-xs border rounded">
-                    <option value="Times-Roman">Times New Roman</option>
-                    <option value="Georgia">Georgia</option>
-                    <option value="Garamond">Garamond</option>
-                    <option value="Palatino">Palatino</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Font Size</label>
-                  <select value={fontSize} onChange={(e) => setFontSize(Number(e.target.value))} className="w-full px-2 py-1.5 text-xs border rounded">
-                    {[10, 10.5, 11, 12, 13, 14].map((s) => (
-                      <option key={s} value={s}>{s}pt</option>
+              {/* Trim size (for PDF and Cover) */}
+              {(format === 'pdf' || format === 'cover') && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Trim Size</label>
+                  <select
+                    value={trimSize}
+                    onChange={(e) => setTrimSize(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-300"
+                  >
+                    {TRIM_SIZES.map((ts) => (
+                      <option key={ts.id} value={ts.id}>{ts.name}</option>
                     ))}
                   </select>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Est. page count: {pageCount} · Spine: {spineWidth.toFixed(3)}"
+                  </p>
                 </div>
-              </div>
+              )}
 
-              <div className="mb-4">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Gutter (binding margin)</label>
-                <select value={gutter} onChange={(e) => setGutter(Number(e.target.value))} className="w-full px-2 py-1.5 text-xs border rounded">
-                  <option value={0.5}>0.5" (thin books)</option>
-                  <option value={0.75}>0.75" (standard)</option>
-                  <option value={1.0}>1.0" (thick books 300+ pages)</option>
-                  <option value={1.25}>1.25" (very thick 500+ pages)</option>
-                </select>
-              </div>
+              {/* PDF-specific options */}
+              {format === 'pdf' && (
+                <>
+                  {/* Section: Content */}
+                  <div className="mb-3">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Content</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="flex items-center gap-2 text-sm text-gray-700">
+                        <input type="checkbox" checked={includeToc} onChange={(e) => setIncludeToc(e.target.checked)} className="rounded" />
+                        Table of Contents
+                      </label>
+                      <label className="flex items-center gap-2 text-sm text-gray-700">
+                        <input type="checkbox" checked={bleed} onChange={(e) => setBleed(e.target.checked)} className="rounded" />
+                        Bleed marks
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Section: Running Headers/Footers */}
+                  <div className="mb-3">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Headers & Footers</p>
+                    <div className="grid grid-cols-1 gap-2">
+                      <label className="flex items-center gap-2 text-sm text-gray-700">
+                        <input type="checkbox" checked={runningHeader} onChange={(e) => setRunningHeader(e.target.checked)} className="rounded" />
+                        Running header <span className="text-xs text-gray-400">(book title left, chapter title right)</span>
+                      </label>
+                      <label className="flex items-center gap-2 text-sm text-gray-700">
+                        <input type="checkbox" checked={runningFooter} onChange={(e) => setRunningFooter(e.target.checked)} className="rounded" />
+                        Running footer <span className="text-xs text-gray-400">(page number centered)</span>
+                      </label>
+                      <label className="flex items-center gap-2 text-sm text-gray-700">
+                        <input type="checkbox" checked={differentFirstPage} onChange={(e) => setDifferentFirstPage(e.target.checked)} className="rounded" />
+                        No header/footer on chapter first pages
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Section: Typography */}
+                  <div className="mb-3">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Typography</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Body Font</label>
+                        <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} className="w-full px-2 py-1.5 text-xs border rounded">
+                          <option value="Times-Roman">Times New Roman</option>
+                          <option value="Georgia">Georgia</option>
+                          <option value="Garamond">Garamond</option>
+                          <option value="Palatino">Palatino</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Font Size</label>
+                        <select value={fontSize} onChange={(e) => setFontSize(Number(e.target.value))} className="w-full px-2 py-1.5 text-xs border rounded">
+                          {[10, 10.5, 11, 12, 13, 14].map((s) => (
+                            <option key={s} value={s}>{s}pt</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section: Layout */}
+                  <div className="mb-4">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Layout</p>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Gutter (binding margin)</label>
+                      <select value={gutter} onChange={(e) => setGutter(Number(e.target.value))} className="w-full px-2 py-1.5 text-xs border rounded">
+                        <option value={0.5}>0.5&quot; (thin books)</option>
+                        <option value={0.75}>0.75&quot; (standard)</option>
+                        <option value={1.0}>1.0&quot; (thick books 300+ pages)</option>
+                        <option value={1.25}>1.25&quot; (very thick 500+ pages)</option>
+                      </select>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Cover-specific options */}
+              {format === 'cover' && (
+                <>
+                  <div className="mb-3">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Front Cover</p>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Cover Image URL</label>
+                      <input
+                        type="text"
+                        value={coverImageUrl}
+                        onChange={(e) => setCoverImageUrl(e.target.value)}
+                        placeholder="https://example.com/cover.jpg"
+                        className="w-full px-2 py-1.5 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-blue-300"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">Paste a URL to your cover image (JPEG/PNG, min 1600px height recommended)</p>
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Back Cover</p>
+                    <div className="space-y-2">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Blurb / Synopsis</label>
+                        <textarea
+                          value={backCoverBlurb}
+                          onChange={(e) => setBackCoverBlurb(e.target.value)}
+                          placeholder="A compelling description of your book..."
+                          rows={3}
+                          className="w-full px-2 py-1.5 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-blue-300 resize-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Author Bio</label>
+                        <textarea
+                          value={authorBio}
+                          onChange={(e) => setAuthorBio(e.target.value)}
+                          placeholder="About the author..."
+                          rows={2}
+                          className="w-full px-2 py-1.5 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-blue-300 resize-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mb-4 p-3 bg-gray-50 rounded text-xs text-gray-600">
+                    <p className="font-medium text-gray-700 mb-1">Cover Summary</p>
+                    <p>Front cover, spine ({spineWidth.toFixed(3)}"), back cover with blurb + bio</p>
+                    <p>Total: {((TRIM_SIZE_MAP[trimSize]?.width || 6) * 2 + spineWidth + 0.25).toFixed(3)}&quot; × {((TRIM_SIZE_MAP[trimSize]?.height || 9) + 0.25).toFixed(3)}&quot; (with bleed)</p>
+                    {kdpIsbn && <p>ISBN: {kdpIsbn}</p>}
+                  </div>
+                </>
+              )}
             </>
           )}
 
-          {/* Cover info */}
-          {format === 'cover' && (
-            <div className="mb-4 p-3 bg-gray-50 rounded text-xs text-gray-600">
-              <p>Cover will include: front cover, spine ({spineWidth.toFixed(3)}"), back cover</p>
-              <p>Total size: {((TRIM_SIZE_MAP[trimSize]?.width || 6) * 2 + spineWidth + 0.25).toFixed(3)}" × {((TRIM_SIZE_MAP[trimSize]?.height || 9) + 0.25).toFixed(3)}" (with bleed)</p>
-            </div>
+          {/* ── KDP Metadata Tab ── */}
+          {activeTab === 'kdp' && (
+            <>
+              <div className="mb-3">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Book Info</p>
+                <div className="space-y-2">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">ISBN (optional)</label>
+                    <input
+                      type="text"
+                      value={kdpIsbn}
+                      onChange={(e) => setKdpIsbn(e.target.value)}
+                      placeholder="978-0-000000-00-0"
+                      className="w-full px-2 py-1.5 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-blue-300"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Pen Name (if different from author)</label>
+                    <input
+                      type="text"
+                      value={kdpPenName}
+                      onChange={(e) => setKdpPenName(e.target.value)}
+                      placeholder="Pen name for publication"
+                      className="w-full px-2 py-1.5 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-blue-300"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Series</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Series Name</label>
+                    <input
+                      type="text"
+                      value={kdpSeriesName}
+                      onChange={(e) => setKdpSeriesName(e.target.value)}
+                      placeholder="The Great Series"
+                      className="w-full px-2 py-1.5 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-blue-300"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Book #</label>
+                    <input
+                      type="number"
+                      value={kdpSeriesNumber}
+                      onChange={(e) => setKdpSeriesNumber(e.target.value)}
+                      placeholder="1"
+                      min="1"
+                      className="w-full px-2 py-1.5 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-blue-300"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Amazon Listing</p>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Book Description</label>
+                  <textarea
+                    value={kdpDescription}
+                    onChange={(e) => setKdpDescription(e.target.value)}
+                    placeholder="Your Amazon book description (HTML allowed)..."
+                    rows={4}
+                    className="w-full px-2 py-1.5 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-blue-300 resize-none"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">This is your Amazon product description. Supports HTML.</p>
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Cover Assets</p>
+                <div className="space-y-2">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Cover Image URL</label>
+                    <input
+                      type="text"
+                      value={coverImageUrl}
+                      onChange={(e) => setCoverImageUrl(e.target.value)}
+                      placeholder="https://example.com/cover.jpg"
+                      className="w-full px-2 py-1.5 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-blue-300"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Back Cover Blurb</label>
+                    <textarea
+                      value={backCoverBlurb}
+                      onChange={(e) => setBackCoverBlurb(e.target.value)}
+                      placeholder="Short blurb for back cover..."
+                      rows={2}
+                      className="w-full px-2 py-1.5 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-blue-300 resize-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Author Bio</label>
+                    <textarea
+                      value={authorBio}
+                      onChange={(e) => setAuthorBio(e.target.value)}
+                      placeholder="About the author..."
+                      rows={2}
+                      className="w-full px-2 py-1.5 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-blue-300 resize-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={handleSaveKdpMeta}
+                className="w-full px-3 py-2 text-xs font-medium bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+              >
+                💾 Save KDP Metadata to Book
+              </button>
+            </>
           )}
 
           {error && (

@@ -43,7 +43,7 @@ export default function SceneEditor({ chapterId, sceneId, focusMode, onExitFocus
         heading: false,
       }),
       Heading.configure({
-        levels: [2, 3, 4, 5, 6],
+        levels: [1, 2, 3, 4, 5, 6],
       }),
       Image.configure({
         inline: false,
@@ -128,7 +128,7 @@ export default function SceneEditor({ chapterId, sceneId, focusMode, onExitFocus
       if (!event.ctrlKey) return false;
 
       const headingMap: Record<string, Level> = {
-        '2': 2 as Level, '3': 3 as Level, '4': 4 as Level, '5': 5 as Level, '6': 6 as Level,
+        '1': 1 as Level, '2': 2 as Level, '3': 3 as Level, '4': 4 as Level, '5': 5 as Level, '6': 6 as Level,
       };
 
       if (headingMap[event.key]) {

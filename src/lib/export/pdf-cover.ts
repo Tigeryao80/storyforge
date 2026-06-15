@@ -4,6 +4,8 @@ export interface CoverOptions {
   trimSize: string;
   pageCount: number;
   coverImageUrl?: string;
+  backCoverBlurb?: string;
+  authorBio?: string;
   spineColor?: string;
   titleColor?: string;
   authorColor?: string;
@@ -62,7 +64,14 @@ export async function exportCoverPdf(book: Book, options: CoverOptions): Promise
     });
     doc.on('error', reject);
 
-    // Background (spine color or white)
+    // ── Background ──
+    // Full cover background (white)
+    doc.save();
+    doc.fillColor('#ffffff');
+    doc.rect(0, 0, totalWidth, totalHeight).fill();
+    doc.restore();
+
+    // Spine background
     if (options.spineColor) {
       doc.save();
       doc.fillColor(options.spineColor);
@@ -71,37 +80,33 @@ export async function exportCoverPdf(book: Book, options: CoverOptions): Promise
       doc.restore();
     }
 
-    // Front cover area
+    // ── Front Cover ──
     const frontX = BLEED_PT + trim.width * PT_PER_INCH + spineWidth * PT_PER_INCH;
+    const frontWidth = trim.width * PT_PER_INCH;
 
-    // Title on front cover
-    doc.fillColor(options.titleColor || '#000000');
-    doc.font('Helvetica-Bold').fontSize(24);
-    doc.text(
-      book.title || 'Untitled Book',
-      frontX + BLEED_PT + 36,
-      BLEED_PT + totalHeight * 0.3,
-      { width: trim.width * PT_PER_INCH - 72, align: 'center' }
-    );
-
-    // Author on front cover
-    if (book.author) {
-      doc.font('Helvetica').fontSize(14);
-      doc.fillColor(options.authorColor || '#333333');
-      doc.text(
-        book.author,
-        frontX + BLEED_PT + 36,
-        doc.y + 20,
-        { width: trim.width * PT_PER_INCH - 72, align: 'center' }
-      );
+    // Cover image (if provided)
+    if (options.coverImageUrl) {
+      try {
+        // Try to embed the image
+        doc.image(options.coverImageUrl, frontX, BLEED_PT, {
+          width: frontWidth,
+          height: trim.height * PT_PER_INCH,
+          fit: [frontWidth, trim.height * PT_PER_INCH],
+        });
+      } catch {
+        // If image fails to load, fall back to text-only cover
+        addFrontCoverText(doc, book, options, frontX, frontWidth, totalHeight);
+      }
+    } else {
+      // Text-only front cover
+      addFrontCoverText(doc, book, options, frontX, frontWidth, totalHeight);
     }
 
-    // Spine text (rotated)
+    // ── Spine ──
     if (spineWidth * PT_PER_INCH > 36) { // only if spine is wide enough
       doc.save();
       doc.font('Helvetica-Bold').fontSize(10);
       doc.fillColor(options.titleColor || '#000000');
-      // Rotate and position spine text
       const spineCenterX = BLEED_PT + trim.width * PT_PER_INCH + (spineWidth * PT_PER_INCH) / 2;
       const spineCenterY = BLEED_PT + (trim.height * PT_PER_INCH) / 2;
       doc.rotate(-90, { origin: [spineCenterX, spineCenterY] });
@@ -112,23 +117,95 @@ export async function exportCoverPdf(book: Book, options: CoverOptions): Promise
       doc.restore();
     }
 
-    // Back cover - barcode placeholder
+    // ── Back Cover ──
     const backX = BLEED_PT + 36;
-    const backY = BLEED_PT + totalHeight * 0.7;
+    const backWidth = trim.width * PT_PER_INCH - 72;
+    const backTopY = BLEED_PT + totalHeight * 0.15;
+
+    // Back cover blurb
+    if (options.backCoverBlurb) {
+      doc.save();
+      doc.font('Helvetica').fontSize(10);
+      doc.fillColor('#333333');
+      doc.text(options.backCoverBlurb, backX, backTopY, {
+        width: backWidth,
+        align: 'left',
+        lineGap: 4,
+      });
+      doc.restore();
+    }
+
+    // Author bio (below blurb)
+    if (options.authorBio) {
+      const bioY = backTopY + 120;
+      doc.save();
+      doc.font('Helvetica').fontSize(9);
+      doc.fillColor('#555555');
+      doc.text(options.authorBio, backX, bioY, {
+        width: backWidth,
+        align: 'left',
+        lineGap: 3,
+      });
+      doc.restore();
+    }
+
+    // Barcode placeholder (bottom right of back cover)
+    const barcodeX = backX + backWidth - 80;
+    const barcodeY = BLEED_PT + totalHeight * 0.75;
     doc.save();
     doc.lineWidth(0.5);
     doc.strokeColor('#999999');
-    doc.rect(backX, backY, 72, 36).stroke();
+    doc.rect(barcodeX, barcodeY, 72, 36).stroke();
     doc.font('Helvetica').fontSize(6);
     doc.fillColor('#999999');
-    doc.text('BARCODE', backX, backY + 40, { width: 72, align: 'center' });
+    doc.text('BARCODE', barcodeX, barcodeY + 40, { width: 72, align: 'center' });
+    if (book.isbn) {
+      doc.font('Helvetica').fontSize(8);
+      doc.text(book.isbn, barcodeX, barcodeY - 12, { width: 72, align: 'center' });
+    }
     doc.restore();
 
-    // Bleed marks
+    // ── Bleed marks ──
     addCoverBleedMarks(doc, totalWidth, totalHeight);
 
     doc.end();
   });
+}
+
+function addFrontCoverText(doc: any, book: Book, options: CoverOptions, frontX: number, frontWidth: number, totalHeight: number) {
+  // Title on front cover
+  doc.fillColor(options.titleColor || '#000000');
+  doc.font('Helvetica-Bold').fontSize(24);
+  doc.text(
+    book.title || 'Untitled Book',
+    frontX + BLEED_PT + 36,
+    BLEED_PT + totalHeight * 0.3,
+    { width: frontWidth - 72, align: 'center' }
+  );
+
+  // Subtitle
+  if (book.subtitle) {
+    doc.moveDown(0.5);
+    doc.font('Helvetica').fontSize(14);
+    doc.fillColor('#555555');
+    doc.text(book.subtitle, frontX + BLEED_PT + 36, doc.y, {
+      width: frontWidth - 72,
+      align: 'center',
+    });
+  }
+
+  // Author on front cover
+  if (book.author) {
+    doc.moveDown(1.5);
+    doc.font('Helvetica').fontSize(14);
+    doc.fillColor(options.authorColor || '#333333');
+    doc.text(
+      book.author,
+      frontX + BLEED_PT + 36,
+      doc.y,
+      { width: frontWidth - 72, align: 'center' }
+    );
+  }
 }
 
 function addCoverBleedMarks(doc: any, totalWidth: number, totalHeight: number) {
