@@ -8,6 +8,7 @@ import { exportToPrintPdf, type PdfExportOptions } from '@/lib/export/pdf-print'
 import { exportToMobi } from '@/lib/export/mobi';
 import { exportCoverPdf, type CoverOptions, calculateSpineWidth } from '@/lib/export/pdf-cover';
 import { TRIM_SIZES } from '@/types/book';
+import CoverGenerator from '@/components/cover/CoverGenerator';
 
 const TRIM_SIZE_MAP: Record<string, { width: number; height: number }> = {
   '5x8': { width: 5, height: 8 },
@@ -52,6 +53,7 @@ export default function ExportSettings({ onClose }: ExportSettingsProps) {
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'format' | 'kdp'>('format');
+  const [showCoverGenerator, setShowCoverGenerator] = useState(false);
 
   const pageCount = estimatePageCount(book);
   const spineWidth = calculateSpineWidth(pageCount);
@@ -483,6 +485,19 @@ export default function ExportSettings({ onClose }: ExportSettingsProps) {
             </>
           )}
 
+          {/* ── AI Cover Generator (both tabs) ── */}
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <button
+              onClick={() => setShowCoverGenerator(true)}
+              className="w-full px-4 py-2.5 text-sm font-medium bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-md hover:from-purple-700 hover:to-indigo-700 transition-all flex items-center justify-center gap-2"
+            >
+              🎨 Generate AI Cover with ComfyUI
+            </button>
+            <p className="text-xs text-gray-400 mt-1 text-center">
+              Powered by Juggernaut XL · Requires ComfyUI running on localhost:8188
+            </p>
+          </div>
+
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
               {error}
@@ -506,6 +521,11 @@ export default function ExportSettings({ onClose }: ExportSettingsProps) {
               {exporting ? 'Exporting...' : 'Export All (KDP)'}
             </button>
           </div>
+
+          {/* Cover Generator Modal */}
+          {showCoverGenerator && (
+            <CoverGenerator onClose={() => setShowCoverGenerator(false)} />
+          )}
         </div>
       </div>
     </div>

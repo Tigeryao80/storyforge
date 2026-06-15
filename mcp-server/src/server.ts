@@ -10,6 +10,7 @@ import {
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'fs';
 import { join, basename, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { generateCover, checkComfyUIStatus } from './comfyui.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -224,6 +225,25 @@ const TOOLS: Tool[] = [
         filename: { type: 'string', description: 'Filename in hermes-output directory' },
       },
       required: ['filename'],
+    },
+  },
+
+  // ── NEW: Cover generation tool ────────────────────────────
+  {
+    name: 'generate_cover',
+    description: 'Generate a book cover image using ComfyUI AI image generation. Provide the book title, genre, and description to create a professional cover. Requires ComfyUI running on localhost:8188.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'Book title (used as concept prompt)' },
+        subtitle: { type: 'string', description: 'Book subtitle (optional)' },
+        author: { type: 'string', description: 'Author name (optional)' },
+        genre: { type: 'string', description: 'Genre: fantasy, scifi, romance, thriller, horror, mystery, historical, literary, adventure, biography' },
+        description: { type: 'string', description: 'Detailed description of what the cover should show' },
+        style: { type: 'string', description: 'Custom style description (optional, overrides genre defaults)' },
+        trimSize: { type: 'string', description: 'Trim size for aspect ratio: 5x8, 5.5x8.5, 6x9 (default), 7x10, 8.5x11' },
+      },
+      required: ['title'],
     },
   },
 ];
@@ -571,6 +591,64 @@ async function handleGetWritingBriefing(args: { filename: string }) {
   return { content: [{ type: 'text' as const, text: lines.join('\n') }] };
 }
 
+// ── NEW: Cover generation handler ──────────────────────────
+
+async function handleGenerateCover(args: { title: string; subtitle?: string; author?: string; genre?: string; description?: string; style?: string; trimSize?: string }) {
+  // First check ComfyUI is running
+  const status = await checkComfyUIStatus();
+  if (!status.running) {
+    return {
+      content: [{
+        type: 'text' as const,
+        text: `❌ ComfyUI is not running. Start it first on localhost:8188.\n\n${status.error || ''}\n\nStart with:\n  cd ComfyUI && python main.py --listen 127.0.0.1 --port 8188`,
+      }],
+      isError: true,
+    };
+  }
+
+  if (status.models.length > 0) {
+    const models = status.models.join(', ');
+    console.error(`Available models: ${models}`);
+  }
+
+  // Generate the cover
+  const result = await generateCover({
+    title: args.title,
+    subtitle: args.subtitle,
+    author: args.author,
+    genre: args.genre,
+    description: args.description,
+    style: args.style,
+    trimSize: args.trimSize,
+  });
+
+  if (!result.success) {
+    return {
+      content: [{ type: 'text' as const, text: `❌ Cover generation failed: ${result.error}` }],
+      isError: true,
+    };
+  }
+
+  const lines = [
+    `✅ Cover generated successfully!`,
+    ``,
+    `**Title:** ${args.title}`,
+    args.subtitle ? `**Subtitle:** ${args.subtitle}` : null,
+    args.genre ? `**Genre:** ${args.genre}` : null,
+    args.trimSize ? `**Trim size:** ${args.trimSize}` : '**Trim size:** 6x9 (default)',
+    ``,
+    `**Image URL:** ${result.imageUrl}`,
+    `**Local path:** ${result.imagePath}`,
+    ``,
+    `To use this as your book cover:`,
+    `1. Open the image URL in your browser to view it`,
+    `2. Set it in StoryForge: book.coverImageUrl = "${result.imageUrl}"`,
+    `3. Or download the image and check it looks good`,
+  ].filter(Boolean).join('\n');
+
+  return { content: [{ type: 'text' as const, text: lines }] };
+}
+
 // ── Server Setup ───────────────────────────────────────────
 
 const server = new Server(
@@ -623,6 +701,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return await handleAddPlotBeat(args as { filename: string; title: string; type?: string; description?: string; chapter_index?: number });
       case 'get_writing_briefing':
         return await handleGetWritingBriefing(args as { filename: string });
+      case 'generate_cover':
+        return await handleGenerateCover(args as { title: string; subtitle?: string; author?: string; genre?: string; description?: string; style?: string; trimSize?: string });
       default:
         throw new Error(`Unknown tool: ${name}`);
     }
