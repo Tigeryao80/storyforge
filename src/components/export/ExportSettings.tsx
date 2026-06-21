@@ -2,11 +2,8 @@
 
 import { useState, useCallback } from 'react';
 import { useBookStore } from '@/store/bookStore';
-import { exportToDocx } from '@/lib/export/docx';
-import { exportToEpub } from '@/lib/export/epub';
-import { exportToPrintPdf, type PdfExportOptions } from '@/lib/export/pdf-print';
-import { exportToMobi } from '@/lib/export/mobi';
-import { exportCoverPdf, type CoverOptions, calculateSpineWidth } from '@/lib/export/pdf-cover';
+// All export logic is delegated to the server via /api/export.
+// No server-only modules are imported here — keeps the client bundle clean.
 import { TRIM_SIZES } from '@/types/book';
 import CoverGenerator from '@/components/cover/CoverGenerator';
 
@@ -56,53 +53,55 @@ export default function ExportSettings({ onClose }: ExportSettingsProps) {
   const [showCoverGenerator, setShowCoverGenerator] = useState(false);
 
   const pageCount = estimatePageCount(book);
-  const spineWidth = calculateSpineWidth(pageCount);
+  const spineWidth = pageCount * 0.002252;
 
   const handleExport = useCallback(async () => {
     setExporting(true);
     setError(null);
     try {
+      const filename = `${book.title || 'book'}`;
+      const safeFilename = filename.replace(/[^a-zA-Z0-9]/g, '_');
+
+      async function exportOne(format: string, options?: Record<string, unknown>): Promise<void> {
+        const res = await fetch('/api/export', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ book, format, options }),
+        });
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(errText || `Export failed (${res.status})`);
+        }
+        const blob = await res.blob();
+        const extMap: Record<string, string> = {
+          epub: 'epub', mobi: 'mobi', docx: 'docx', pdf: '_print.pdf', cover: '_cover.pdf',
+        };
+        downloadBlob(blob, `${safeFilename}${extMap[format] || format}`);
+      }
+
       switch (format) {
-        case 'epub': {
-          const blob = await exportToEpub(book);
-          downloadBlob(blob, `${book.title || 'book'}.epub`);
+        case 'epub':
+        case 'mobi':
+        case 'docx':
+          await exportOne(format);
           break;
-        }
-        case 'mobi': {
-          const blob = await exportToMobi(book);
-          downloadBlob(blob, `${book.title || 'book'}.mobi`);
-          break;
-        }
-        case 'docx': {
-          await exportToDocx(book);
-          break;
-        }
         case 'pdf': {
-          const pdfOpts: PdfExportOptions = {
-            trimSize,
-            bleed,
-            pageNumbers,
-            includeToc,
-            fontFamily,
-            fontSize,
-            lineHeight: 1.5,
-            gutterInches: gutter,
-            runningHeader,
-            runningFooter,
-            differentFirstPage,
+          const pdfOpts = {
+            trimSize, bleed, pageNumbers, includeToc,
+            fontFamily, fontSize, lineHeight: 1.5, gutterInches: gutter,
+            runningHeader, runningFooter, differentFirstPage,
           };
-          await exportToPrintPdf(book, pdfOpts);
+          await exportOne('pdf', pdfOpts as any);
           break;
         }
         case 'cover': {
-          const coverOpts: CoverOptions = {
-            trimSize,
-            pageCount,
+          const coverOpts = {
+            trimSize, pageCount,
             coverImageUrl: coverImageUrl || undefined,
             backCoverBlurb: backCoverBlurb || undefined,
             authorBio: authorBio || undefined,
           };
-          await exportCoverPdf(book, coverOpts);
+          await exportOne('cover', coverOpts as any);
           break;
         }
       }
@@ -112,33 +111,50 @@ export default function ExportSettings({ onClose }: ExportSettingsProps) {
     } finally {
       setExporting(false);
     }
-  }, [format, trimSize, bleed, pageNumbers, includeToc, fontFamily, fontSize, gutter, runningHeader, runningFooter, differentFirstPage, coverImageUrl, backCoverBlurb, authorBio, book, onClose]);
+  }, [format, trimSize, bleed, pageNumbers, includeToc, fontFamily, fontSize, gutter, runningHeader, runningFooter, differentFirstPage, coverImageUrl, backCoverBlurb, authorBio, book, pageCount, onClose]);
 
   const handleExportAll = useCallback(async () => {
     setExporting(true);
     setError(null);
     try {
-      // Export all KDP formats
-      const epubBlob = await exportToEpub(book);
-      downloadBlob(epubBlob, `${book.title || 'book'}.epub`);
+      const filename = `${book.title || 'book'}`;
+      const safeFilename = filename.replace(/[^a-zA-Z0-9]/g, '_');
 
-      const mobiBlob = await exportToMobi(book);
-      downloadBlob(mobiBlob, `${book.title || 'book'}.mobi`);
+      async function exportOne(format: string, options?: Record<string, unknown>): Promise<void> {
+        const res = await fetch('/api/export', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ book, format, options }),
+        });
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(errText || `Export failed (${res.status})`);
+        }
+        const blob = await res.blob();
+        const extMap: Record<string, string> = {
+          epub: 'epub', mobi: 'mobi', docx: 'docx', pdf: '_print.pdf', cover: '_cover.pdf',
+        };
+        downloadBlob(blob, `${safeFilename}${extMap[format] || format}`);
+      }
 
-      const pdfOpts: PdfExportOptions = {
+      // Export all KDP formats sequentially
+      await exportOne('epub');
+      await exportOne('mobi');
+
+      const pdfOpts = {
         trimSize, bleed, pageNumbers, includeToc,
         fontFamily, fontSize, lineHeight: 1.5, gutterInches: gutter,
         runningHeader, runningFooter, differentFirstPage,
       };
-      await exportToPrintPdf(book, pdfOpts);
+      await exportOne('pdf', pdfOpts);
 
-      const coverOpts: CoverOptions = {
+      const coverOpts = {
         trimSize, pageCount,
         coverImageUrl: coverImageUrl || undefined,
         backCoverBlurb: backCoverBlurb || undefined,
         authorBio: authorBio || undefined,
       };
-      await exportCoverPdf(book, coverOpts);
+      await exportOne('cover', coverOpts);
 
       onClose();
     } catch (err) {
@@ -146,7 +162,7 @@ export default function ExportSettings({ onClose }: ExportSettingsProps) {
     } finally {
       setExporting(false);
     }
-  }, [book, trimSize, bleed, pageNumbers, includeToc, fontFamily, fontSize, gutter, runningHeader, runningFooter, differentFirstPage, coverImageUrl, backCoverBlurb, authorBio, onClose]);
+  }, [book, trimSize, bleed, pageNumbers, includeToc, fontFamily, fontSize, gutter, runningHeader, runningFooter, differentFirstPage, coverImageUrl, backCoverBlurb, authorBio, pageCount, onClose]);
 
   const handleSaveKdpMeta = useCallback(() => {
     // Save KDP metadata to the book store

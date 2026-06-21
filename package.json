@@ -4,8 +4,10 @@
   "description": "StoryForge — Book writing, formatting & publishing app with AI co-author",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build --webpack",
+    "preflight": "node scripts/check-import-boundaries.js",
+    "dev": "node scripts/check-import-boundaries.js && next dev",
+    "build": "node scripts/check-import-boundaries.js && next build --webpack",
+    "build:turbopack": "node scripts/check-import-boundaries.js && next build",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
@@ -34,6 +36,7 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "uuid": "^13.0.0",
+    "zod": "^4.4.3",
     "zustand": "^5.0.10"
   },
   "devDependencies": {
@@ -53,6 +56,9 @@
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
     "playwright": "^1.60.0",
+    "prettier": "^3.8.4",
+    "stylelint": "^17.13.0",
+    "stylelint-config-standard": "^40.0.0",
     "tailwindcss": "^4.1.17",
     "ts-jest": "^29.4.11",
     "typescript": "^5.9.3"

@@ -31,7 +31,7 @@ export function calculateSpineWidth(pageCount: number): number {
   return pageCount * SPINE_WIDTH_PER_PAGE; // in inches
 }
 
-export async function exportCoverPdf(book: Book, options: CoverOptions): Promise<void> {
+export async function exportCoverPdf(book: Book, options: CoverOptions): Promise<Blob> {
   const PDFDocument = (await import('pdfkit'));
   const PdfDocClass = (PDFDocument as any).default || PDFDocument;
 
@@ -49,18 +49,12 @@ export async function exportCoverPdf(book: Book, options: CoverOptions): Promise
 
   const chunks: Buffer[] = [];
 
-  return new Promise((resolve, reject) => {
+  return new Promise<Blob>((resolve, reject) => {
     doc.on('data', (chunk: Buffer) => chunks.push(chunk));
     doc.on('end', () => {
       const pdfBuffer = Buffer.concat(chunks);
       const blob = new Blob([pdfBuffer.buffer as ArrayBuffer], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${(book.title || 'book').replace(/[^a-zA-Z0-9]/g, '_')}_cover.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
-      resolve();
+      resolve(blob);
     });
     doc.on('error', reject);
 

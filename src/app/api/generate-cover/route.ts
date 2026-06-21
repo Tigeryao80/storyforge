@@ -2,22 +2,42 @@
 // Next.js API route that bridges the StoryForge UI to ComfyUI
 
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/api/auth';
+import { z } from 'zod';
 
 const COMFYUI_BASE = 'http://127.0.0.1:8188';
 
-interface CoverPrompt {
-  title: string;
-  subtitle?: string;
-  author?: string;
-  genre?: string;
-  description?: string;
-  style?: string;
-  trimSize?: string;
-}
+const CoverPromptSchema = z.object({
+  title: z.string().min(1).max(500),
+  subtitle: z.string().max(500).optional(),
+  author: z.string().max(200).optional(),
+  genre: z.string().max(100).optional(),
+  description: z.string().max(5000).optional(),
+  style: z.string().max(200).optional(),
+  trimSize: z.string().max(50).optional(),
+});
+
+type CoverPrompt = z.infer<typeof CoverPromptSchema>;
+
+const MAX_BODY_SIZE = 1 * 1024 * 1024; // 1MB
 
 export async function POST(request: NextRequest) {
+  const authError = requireAuth(request);
+  if (authError) return authError;
+
+  // Body size check
+  const contentLength = request.headers.get('content-length');
+  if (contentLength && parseInt(contentLength, 10) > MAX_BODY_SIZE) {
+    return NextResponse.json({ error: `Body too large. Max ${MAX_BODY_SIZE / 1024 / 1024}MB.` }, { status: 413 });
+  }
+
   try {
-    const prompt: CoverPrompt = await request.json();
+    const rawBody = await request.json();
+    const parsed = CoverPromptSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body', details: parsed.error.flatten() }, { status: 400 });
+    }
+    const prompt: CoverPrompt = parsed.data;
 
     // 1. Check ComfyUI is running
     try {
@@ -185,7 +205,11 @@ function createCoverWorkflow(checkpoint: string, positivePrompt: string, negativ
     '5': {
       class_type: 'KSampler',
       inputs: {
-        seed: Math.floor(Math.random() * 999999),
+        seed: (() => {
+          const buf = new Uint32Array(1);
+          crypto.getRandomValues(buf);
+          return buf[0] % 999999;
+        })(),
         steps: 25,
         cfg: 7,
         sampler_name: 'euler',

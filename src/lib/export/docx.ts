@@ -1,6 +1,5 @@
 // src/lib/export/docx.ts
 
-import { saveAs } from 'file-saver';
 import type { Book } from '@/types/book';
 
 // Dynamic import for docx to avoid TS module issues
@@ -9,7 +8,7 @@ async function getDocx() {
   return mod;
 }
 
-export async function exportToDocx(book: Book): Promise<void> {
+export async function exportToDocx(book: Book): Promise<Blob> {
   const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } = await getDocx();
 
   const children: InstanceType<typeof Paragraph>[] = [];
@@ -70,5 +69,5 @@ export async function exportToDocx(book: Book): Promise<void> {
   });
 
   const blob = await Packer.toBlob(doc);
-  saveAs(blob, `${book.title || 'book'}.docx`);
+  return blob;
 }

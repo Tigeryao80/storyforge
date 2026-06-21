@@ -29,7 +29,7 @@ const TRIM_SIZE_MAP: Record<string, { width: number; height: number }> = {
 const PT_PER_INCH = 72;
 const BLEED_PT = 0.125 * PT_PER_INCH; // 9pt bleed per side
 
-export async function exportToPrintPdf(book: Book, options: PdfExportOptions): Promise<void> {
+export async function exportToPrintPdf(book: Book, options: PdfExportOptions): Promise<Blob> {
   const PDFDocument = (await import('pdfkit'));
   const PdfDocClass = (PDFDocument as any).default || PDFDocument;
 
@@ -63,18 +63,12 @@ export async function exportToPrintPdf(book: Book, options: PdfExportOptions): P
   let pageNum = 0;
   let isFirstPageOfChapter = true;
 
-  return new Promise((resolve, reject) => {
+  return new Promise<Blob>((resolve, reject) => {
     doc.on('data', (chunk: Buffer) => chunks.push(chunk));
     doc.on('end', () => {
       const pdfBuffer = Buffer.concat(chunks);
       const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${(book.title || 'book').replace(/[^a-zA-Z0-9]/g, '_')}_print.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
-      resolve();
+      resolve(blob);
     });
     doc.on('error', reject);
 

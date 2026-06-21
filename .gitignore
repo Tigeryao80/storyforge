@@ -40,3 +40,17 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .agents/
+
+# vscode extension
+tools/vscode-extension/node_modules/
+tools/vscode-extension/out/
+tools/vscode-extension/.vscodeignore
+
+# skylos cache
+.skylos/
+
+# python cache
+__pycache__/
+
+# isolated linter venv (semgrep broken in 1.167.0)
+.venv-linters/

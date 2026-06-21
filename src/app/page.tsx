@@ -10,12 +10,13 @@ import ChapterGoals from '@/components/sidebar/ChapterGoals';
 import SprintTimer from '@/components/sprint/SprintTimer';
 import CloudBackup from '@/components/backup/CloudBackup';
 import HermesPanel from '@/components/hermes/HermesPanel';
+import SecurityPanel from '@/components/security/SecurityPanel';
 import VersionHistory from '@/components/history/VersionHistory';
 import DocxImportButton from '@/components/import/DocxImportButton';
 import HermesImportButton from '@/components/import/HermesImportButton';
 import ThemeBuilder from '@/components/themes/ThemeBuilder';
 import DevicePreview from '@/components/preview/DevicePreview';
-import ExportSettings from '@/components/export/ExportSettings';
+import type { Book } from '@/types/book';
 import FocusMode from '@/components/editor/FocusMode';
 import { useBookStore } from '@/store/bookStore';
 import { loadMostRecentBook } from '@/lib/db/bookPersistence';
@@ -29,6 +30,18 @@ const SceneEditor = dynamic(() => import('@/components/editor/SceneEditor'), {
     </div>
   ),
 });
+
+const ExportSettings = dynamic(
+  () => import('@/components/export/ExportSettings'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
+        <div className="bg-white rounded-lg p-6 shadow-xl">Loading export...</div>
+      </div>
+    ),
+  }
+);
 
 export default function Home() {
   const {
@@ -69,24 +82,6 @@ export default function Home() {
     setShowFocusMode(false);
   }, []);
 
-  const handleExport = async (format: 'docx' | 'epub' | 'pdf' | 'mobi') => {
-    if (format === 'docx') {
-      const { exportToDocx } = await import('@/lib/export/docx');
-      await exportToDocx(book);
-    } else if (format === 'epub') {
-      const { exportToEpub } = await import('@/lib/export/epub');
-      const blob = await exportToEpub(book);
-      downloadBlob(blob, `${book.title || 'book'}.epub`);
-    } else if (format === 'mobi') {
-      const { exportToMobi } = await import('@/lib/export/mobi');
-      const blob = await exportToMobi(book);
-      downloadBlob(blob, `${book.title || 'book'}.mobi`);
-    } else if (format === 'pdf') {
-      const { exportToPdf } = await import('@/lib/export/pdf');
-      await exportToPdf(book);
-    }
-  };
-
   return (
     <div className="h-screen flex flex-col bg-gray-100">
       {/* Top toolbar */}
@@ -123,6 +118,15 @@ export default function Home() {
         <ThemeBuilder />
         <DevicePreview />
 
+        {/* Security Dashboard */}
+        <a
+          href="/security"
+          className="text-xs px-2 py-1 rounded bg-red-50 hover:bg-red-100 text-red-700 font-medium transition-colors"
+          title="Security Dashboard"
+        >
+          🛡️ Security
+        </a>
+
         {/* Focus mode toggle */}
         <button
           onClick={() => setShowFocusMode((v) => !v)}
@@ -137,34 +141,6 @@ export default function Home() {
         </button>
 
         <div className="flex items-center gap-1">
-          <button
-            onClick={() => handleExport('docx')}
-            className="text-xs px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-600"
-            title="Export to DOCX"
-          >
-            DOCX
-          </button>
-          <button
-            onClick={() => handleExport('epub')}
-            className="text-xs px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-600"
-            title="Export to EPUB"
-          >
-            EPUB
-          </button>
-          <button
-            onClick={() => handleExport('mobi')}
-            className="text-xs px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-600"
-            title="Export to MOBI (Kindle)"
-          >
-            MOBI
-          </button>
-          <button
-            onClick={() => handleExport('pdf')}
-            className="text-xs px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-600"
-            title="Export to PDF"
-          >
-            PDF
-          </button>
           <button
             onClick={() => setShowExportSettings(true)}
             className="text-xs px-2 py-1 rounded bg-blue-100 hover:bg-blue-200 text-blue-700 font-medium"
@@ -186,6 +162,7 @@ export default function Home() {
             <SprintTimer />
             <CloudBackup />
             <HermesPanel />
+            <SecurityPanel />
             <VersionHistory />
           </div>
         )}
@@ -225,15 +202,4 @@ export default function Home() {
       )}
     </div>
   );
-}
-
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
 }
